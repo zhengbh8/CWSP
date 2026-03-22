@@ -1,0 +1,547 @@
+% !TeX root = ../main.tex
+
+\chapter{非加性最短路径问题及其算法}
+
+本章围绕非加性最短路径问题展开，先回顾加性最短路径的基本概念与经典算法，再给出非加性问题的形式化定义与失效原因，继而讨论分类与求解思路，最后介绍线图转化理论和CUDA并行框架，为下一章的算法设计与实现奠定基础。
+
+\section{预备知识}
+
+\subsection{图的定义}
+
+在图论中，图的定义主要由顶点和边构成，一般表示为 $G(V, E, W)$，其中 $V$ 是顶点集，$E$ 是所有边的集合，$W$ 是所有边权值的集合。图的总顶点数一般用 $|V|=n$ 来表示，总边数则用 $|E|=m$ 表示。为了更清晰地阐述图的相关定义，引入以下网络图进行说明，具体如图2-1所示。
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+    >=Latex,
+    node distance=22mm,
+    every node/.style={circle,draw,minimum size=7mm,inner sep=0pt},
+    every edge/.style={draw,->,line width=0.4pt}
+  ]
+    \node (A) {A};
+    \node (B) [right=of A] {B};
+    \node (C) [below=of A] {C};
+    \node (D) [right=of C] {D};
+
+    \path (A) edge node[above] {$2$} (B)
+          (A) edge node[left]  {$4$} (C)
+          (B) edge node[right] {$3$} (D)
+          (C) edge node[below] {$1$} (D)
+          (C) edge[bend left=15] node[above] {$5$} (B);
+  \end{tikzpicture}
+  \caption{网络图示例}
+  \label{fig:graph_example}
+\end{figure}
+
+在图论中，根据边的指向性，可以将图分为有向图和无向图。图2-1展示了一个简单的有向图示例，边 $(\mathbf{A}, \mathbf{B})$ 表明是从点 $A$ 到点 $B$，如果边 $(\mathbf{A}, \mathbf{B})$ 没有方向指示，则为无向图。在有向图中，顶点的出度表示该顶点发出的边的总数量，顶点入度表示该顶点接收的边的总数量。在无向图中，由于没有方向指示，按照定义顶点度数为与该顶点相连的边的总数。
+
+如果图中任意一条边都附加权重，则该图为有权图，否则该图为无权图。这里的权重可以是距离、时间、耗油量等。通常有权图用 $G(V, E, W)$ 表示，无权图则用 $G(V, E)$ 表示。
+
+\subsection{图的储存格式}
+
+在图论领域，图的存储方式经历了多次创新和改进。从最初的邻接矩阵存储到后来的邻接表，不同存储方式在空间利用上存在显著差异。最简单的邻接矩阵存储需要 $n^2$ 的空间，其中 $n$ 为图的顶点数。当图的顶点数量不大时，这种方式并不会暴露出明显问题；但当顶点数量极大时，邻接矩阵存储可能导致巨大的空间占用，尤其在稀疏图场景下会造成明显浪费。
+
+为应对该问题，研究者提出将二维邻接矩阵压缩为一维数组来存储图结构。常见的一维数组格式包括 Coordinate（COO）与 Compressed Sparse Row（CSR）两类。
+
+COO 格式利用三个一维数组存储邻接矩阵中非零元素的坐标信息与数值，分别为按行存储的行坐标索引、列坐标索引和值数组。若图中非零元素（即非零权值边）数量为 $m$，则 COO 的空间开销约为 $3m$。尽管 COO 形式显著减少了稀疏图的存储空间，但其仍存在进一步优化空间。
+
+CSR 格式同样使用三个一维数组，但将 COO 中的“行坐标索引数组”压缩为“行指针数组” \texttt{row\_ptr}：该数组的第 $i$ 项记录第 $i$ 行非零元素在值数组中的起始位置（累积计数），从而避免为每个非零元素重复存储行号。对应地，CSR 还包含列索引数组 \texttt{col\_indices} 与值数组 \texttt{value}。在这种方式下，空间开销约为 $2m+n+1$。图\ref{fig:csr_storage}给出了一个邻接矩阵 $C$ 转换为 CSR 格式存储的示例，可以观察到 CSR 在压缩存储的同时并未改变图的拓扑结构信息，且邻接矩阵与 CSR 格式可相互转换。
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+    >=Latex,
+    font=\small,
+    box/.style={draw,minimum height=6mm,minimum width=7mm,inner sep=1.5pt},
+    label/.style={anchor=east},
+    arr/.style={->,line width=0.45pt}
+  ]
+    % Left: adjacency matrix C
+    \matrix (C) [matrix of math nodes, left delimiter={(}, right delimiter={)},
+      nodes={inner sep=1.2pt}, row sep=2.5pt, column sep=4.5pt] {
+      0 & 1 & 0 & 3 \\
+      2 & 0 & 3 & 0 \\
+      0 & 1 & 0 & 0 \\
+      3 & 0 & 5 & 0 \\
+    };
+    \node[left=3mm of C.west] {$C=$};
+
+    % Anchor for CSR block (shift right to avoid overlaps)
+    \coordinate (csr) at ([xshift=50mm]C.east);
+    \draw[arr] ([xshift=4mm]C.east) -- ([xshift=26mm]C.east);
+
+    % Right: CSR arrays
+    \node[label] (rpl) at ([yshift=9mm]csr) {\texttt{row\_ptr}:};
+    \node[box] (rp0) at ([xshift=14mm,yshift=9mm]csr) {0};
+    \node[box] (rp1) [right=0pt of rp0] {2};
+    \node[box] (rp2) [right=0pt of rp1] {4};
+    \node[box] (rp3) [right=0pt of rp2] {5};
+    \node[box] (rp4) [right=0pt of rp3] {7};
+
+    \node[label] (cil) at ([yshift=1mm]csr) {Col\_indices:};
+    \node[box] (ci0) at ([xshift=14mm,yshift=1mm]csr) {1};
+    \node[box] (ci1) [right=0pt of ci0] {3};
+    \node[box] (ci2) [right=0pt of ci1] {0};
+    \node[box] (ci3) [right=0pt of ci2] {2};
+    \node[box] (ci4) [right=0pt of ci3] {1};
+    \node[box] (ci5) [right=0pt of ci4] {0};
+    \node[box] (ci6) [right=0pt of ci5] {2};
+
+    \node[label] (val) at ([yshift=-7mm]csr) {Value:};
+    \node[box] (v0) at ([xshift=14mm,yshift=-7mm]csr) {1};
+    \node[box] (v1) [right=0pt of v0] {3};
+    \node[box] (v2) [right=0pt of v1] {2};
+    \node[box] (v3) [right=0pt of v2] {3};
+    \node[box] (v4) [right=0pt of v3] {1};
+    \node[box] (v5) [right=0pt of v4] {3};
+    \node[box] (v6) [right=0pt of v5] {5};
+  \end{tikzpicture}
+  \caption{CSR 格式存储示意图}
+  \label{fig:csr_storage}
+\end{figure}
+
+\section{最短路径问题}
+
+
+\subsection{单源最短路径问题的定义}
+
+\begin{definition}
+在图 $G(V, E, W)$ 中，若边集合 $(v_i, v_{i+1}), (v_{i+1}, v_{i+2}), \ldots, (v_{p-1}, v_j)$ 存在，则序列 $p = \langle v_i, v_{i+1}, \ldots, v_j \rangle$ 称为从点 $v_i$ 到点 $v_j$ 的一条路径。为方便表述复杂网络中的边，图的单条边也常由希腊字母 $\alpha, \beta$ 等直接表示。路径 $p$ 的距离（或代价值）定义为
+\[
+f(p) = \sum_{k=i}^{j-1} w(v_k, v_{k+1}).
+\]
+\end{definition}
+
+\begin{definition}
+最短路径是指从起点 $s$ 到点 $v_j$ 的所有路径中，使得路径长度（即所有边权重之和）最小的路径。若存在多条最短路径，则任选其一作为最短路径。最短路径长度为
+\[
+d(v_i, v_j) = \min(f(p)),
+\]
+其中 $p$ 为所有从 $v_i$ 到 $v_j$ 的路径集合中的任意路径。
+\end{definition}
+
+\begin{definition}
+设 $u$ 和 $v$ 是图 $G(V, E, W)$ 中两个顶点，$w(u,v)$ 表示顶点 $u$ 到点 $v$ 的边的权重，$d(u)$ 和 $d(v)$ 分别表示源点 $s$ 到顶点 $u$ 和顶点 $v$ 的最短距离。如果 $d(u) + w(u,v) < d(v)$，则更新 $d(v)$ 为 $d(u) + w(u,v)$。这一过程就是松弛操作。
+\end{definition}
+
+单源最短路径问题即求源点到所有顶点的最短路径，核心操作为反复松弛。
+
+\subsection{经典最短路径问题算法}
+
+最短路径问题的研究已形成一批经典算法体系，其中最具代表性的是 Dijkstra 算法。对于非负权图，Dijkstra 以“反复选择当前距离最小的未确定顶点并执行松弛”为核心，构成了大量工程实现与理论分析的基础。在此基础上，研究者提出了多种面向不同场景的改进与变体：例如引入启发函数的 A* 算法用于加速目标导向搜索；双向 Dijkstra 通过从源点与终点同时扩展以减少搜索空间；在边权为小整数时可用桶队列（Dial 算法）降低优先队列开销；以及针对动态路网、增量更新、层次化图的若干加速框架等。
+
+由于许多高效最短路径算法都可视为在 Dijkstra 框架上的数据结构优化、搜索策略改造或问题转化，因此下面将对 Dijkstra 算法进行较为详细的介绍，并给出对应伪代码与步骤说明。
+
+\subsubsection{Dijkstra 算法}
+
+Dijkstra算法由荷兰计算机科学家E.W. Dijkstra于1956年提出，是解决单源最短路径问题最常用的贪心算法。该算法适用于所有边权重均为非负的有向图或无向图。
+
+
+算法思想：Dijkstra算法采用贪心策略，每次从未访问的顶点中选择距离源点最近的顶点，将其加入已访问集合，并据此更新其他顶点的最短距离。通过对所有顶点的这样处理，最终可得到从源点到所有其他顶点的最短路径。
+
+
+时间复杂度：采用二叉堆实现的Dijkstra算法时间复杂度为 $O((|V| + |E|) \log |V|)$；采用线性查找实现的Dijkstra算法时间复杂度为 $O(|V|^2)$。
+
+
+算法伪代码：
+
+\begin{algorithm}[H]
+  \SetAlgoLined
+  \caption{Dijkstra Algorithm}
+  \label{algo:dijkstra}
+  
+  Input: Graph $G = (V, E, W)$, source vertex $s$\\
+  Output: Shortest distances $d(v)$ for all $v \in V$\\
+  
+  Initialization:\\
+  \For{each $v \in V$}{
+    $d(v) \leftarrow \infty$\
+  }
+  $d(s) \leftarrow 0$\
+  $T \leftarrow V/s$\
+  
+  \While{$T$ is not empty}{
+    Min: $u \leftarrow \{v : v \in T \text{ and } \forall c \in T, d(v) \leq d(c)\}$\
+    
+    \If{$d(u) = \infty$}{
+      break\
+    }
+    
+    Remove $u$ from $T$\
+    
+    Relax:\
+    \For{each $(u, v) \in E$}{
+      \If{$d(u) + w(u, v) < d(v)$}{
+        $d(v) \leftarrow d(u) + w(u, v)$\
+      }
+    }
+  }
+  
+  \Return{$d$}\
+\end{algorithm}
+
+在上述伪代码中，$d(v)$ 表示源点 $s$ 到顶点 $v$ 的最短距离，$T$ 表示未处理顶点的集合，$w(u, v)$ 表示边 $(u, v)$ 的权重。
+
+算法步骤说明：
+\begin{enumerate}
+  \item 初始化：将所有顶点的距离初始化为无穷大，源点距离为0，未处理顶点集合 $T$ 为除源点外的所有顶点。
+  \item 主循环：当存在未处理的顶点时，重复以下步骤：
+  \begin{enumerate}
+    \item 从未处理顶点集合 $T$ 中选择距离最小的顶点 $u$。
+    \item 若 $d(u) = \infty$，说明剩余顶点不可达，退出循环。
+    \item 将顶点 $u$ 从集合 $T$ 中移除。
+    \item 对从 $u$ 出发的所有边执行松弛操作，若发现更短路径则更新距离。
+  \end{enumerate}
+  \item 输出：返回所有顶点的最短距离数组 $d$。
+\end{enumerate}
+
+优缺点分析：
+\begin{itemize}
+  \item 优点：计算效率高，时间复杂度为 $O((|V|+|E|)\log|V|)$（使用优先队列实现）；适用于边权非负的单源最短路径问题。
+  \item 缺点：无法处理带有负权边的图；对于稠密图，优先队列的操作可能导致性能下降。
+  \item 与非加性问题的联系：Dijkstra算法依赖于边权的加性性质，无法直接应用于非加性问题，需要对问题进行转化或设计新的算法。
+\end{itemize}
+
+\section{非加性最短路径问题}
+
+非加性最短路径问题放宽了加性假设，使边权可能随上下文、时间或约束变化，导致经典算法失效。本节说明定义、失效原因、现实普适性，并据此给出分类与求解思路。
+
+\subsection{定义与性质}
+
+最短路径的核心是路径成本函数。若路径成本可写成各边固定权重的算术和，则属于加性最短路径；否则即为非加性最短路径。
+
+\subsubsection{加性最短路径问题的定义}
+
+\begin{definition}[加性最短路径问题]
+设路径 $p = \langle v_0, v_1, v_2, \ldots, v_k \rangle$ 为从源点 $v_0 = s$ 到终点 $v_k = t$ 的路径，若路径的总成本满足
+\[
+    f(p) = \sum_{i=0}^{k-1} w(v_i, v_{i+1}),
+\]
+即“等于路径所经过各边权重的算术和”，且“各边的权重为恒定的、与路径中其他边无关的固定值”，则称该最短路径问题为加性最短路径问题（Additive Shortest Path Problem, ASPP）。
+\end{definition}
+
+加性问题的核心特征包括：
+
+（1）边权的独立性和恒定性：在加性最短路径问题中，每条边 $(u, v)$ 的权重 $w(u, v)$ 是预定义的、恒定的常数，与该边在路径中的位置、路径中的其他边、或任何其他上下文无关。这是加性问题最本质的假设，保证了成本的可预测性与确定性。
+
+（2）无后效性（Memoryless Property）：子路径的成本独立于路径的后续扩展，即对任意路径 $p_1 = \langle s, \ldots, u \rangle$ 和 $p_2 = \langle u, \ldots, t \rangle$，有
+\[
+    f(p_1 \oplus p_2) = f(p_1) + f(p_2),
+\]
+其中 $\oplus$ 表示路径拼接。历史信息（前面的路径）对未来成本无影响。
+
+（3）最优子结构（Optimal Substructure）：最优路径必然由各段局部最优子路径构成。若 $p^* = \langle s, \ldots, u, \ldots, t \rangle$ 是从 $s$ 到 $t$ 的最优路径，则 $p^*$ 中从 $s$ 到 $u$ 的子路径必为 $s$ 到 $u$ 的最优路径。这直接导出递推关系
+\[
+    d(t) = \min\{d(u) + w(u, t) : (u, t) \in E\},
+\]
+这是 Dijkstra、Bellman-Ford 等经典贪心与动态规划算法高效求解的理论根基。
+
+\subsubsection{非加性最短路径问题的定义}
+
+\begin{definition}[非加性最短路径问题]
+若路径总成本 $f(p)$ 不能表示为
+\[
+  f(p) = \sum_{i=0}^{k-1} w(v_i, v_{i+1}),
+\]
+或边权不再恒定、独立（随时间、位置或历史决策变化），则该最短路径问题称为非加性最短路径问题（Non-additive Shortest Path Problem, NASPP）。
+\end{definition}
+
+非加性问题破坏了加性假设的至少一条，带来三类失效：
+
+边权动态性与耦合性：权重依赖时间、路径位置或先前选择，如时变网络 $w(u,v,t)$、容量受限网络的拥塞反馈、多目标场景的向量权重 $\mathbf{w}(u,v)$。
+
+无后效性失效：历史决策影响后续成本，例如车辆疲劳模型、带宽占用导致后续代价（如转弯代价等）依赖当前及前驱路径 $\alpha, \beta$。
+
+最优子结构破坏：全局最优不能由子问题最优递推，如极值型目标 $f(p)=\max w(v_i,v_{i+1})$、多目标 Pareto 优化、带全局约束的可行性组合。
+
+\subsection{问题分类}
+
+
+\subsubsection{瓶颈路径问题}
+
+瓶颈路径问题（Bottleneck Path Problem）是最短路径问题的重要变体，其目标不是最小化路径上所有边权重之和，而是最小化路径上的最大边权（min-max 路径），或最大化路径上的最小边权（max-min 路径，又称最宽路径问题）。该类问题广泛应用于网络带宽优化（寻找最大可用带宽路径）、交通运输（最小化道路最大坡度或载重限制）、通信网络（最大化链路最小容量）等场景\cite{pollack1960maxcap,edmonds1972theoretical}。
+
+与经典加性最短路径不同，瓶颈路径仍具有多项式时间可解性，常见算法可在 $O(|E| + |V|\log|V|)$ 时间内求解\cite{camerini1984random,gj1979np}。典型求解思路包括：
+\begin{itemize}
+  \item 修改 Dijkstra 的松弛规则：将“累加型”距离更新改为“取最大值”的瓶颈松弛（对应 min-max 目标），从而在贪心框架下求解瓶颈最优路径。
+  \item 生成树方法：利用最大（或最小）瓶颈生成树的性质，使任意两点间树上路径满足瓶颈最优性，从而快速回答多源查询\cite{camerini1984random}。
+  \item 二分阈值 + 可达性检验：对边权阈值二分，检查在满足阈值约束的子图中源汇是否连通；亦可用按边权排序并查集合并，直到源汇连通为止\cite{gj1979np}。
+\end{itemize}
+
+近年来，随着软件定义网络（SDN）和 5G 通信的发展，动态网络环境下的瓶颈路径重规划、多约束瓶颈路径以及不确定性场景下的鲁棒瓶颈路径优化逐渐成为研究关注点\cite{li2026lmask,zhang2025tgsl}。
+
+\subsubsection{资源约束型最短路径问题}
+
+资源约束型最短路径问题（Resource Constrained Shortest Path, RCSP）在最短路径目标之外引入多种资源约束，例如物流配送中的时间窗约束、电动车路径规划中的电量约束、以及车辆路径问题中的容量约束等。由于“路径可行性/成本”同时依赖累计资源状态，经典最短路径的最优子结构往往被破坏，使得问题复杂度通常上升并在一般形式下达到 NP-hard\cite{pugliese2013survey}。
+
+主要求解方法包括：标签算法（labeling）为每个节点维护多条代表不同资源消耗状态的标签，并利用支配规则剪枝减少搜索空间\cite{irnich2005spprc}；分支定价（branch-and-price）将 RCSP 作为列生成框架中的定价子问题，适用于大规模车辆路径与机组排班等整数规划模型\cite{barnhart1998branch}；以及面向特定约束结构的剪枝与割平面技术（例如在弧路径问题/容量约束场景下的 cut-first branch-and-price-second 思路）\cite{bode2012cutfirst}。
+
+\subsubsection{多属性非线性组合最短路径问题}
+
+多属性非线性组合最短路径问题考虑路径上的多个属性（如时间、成本、风险、能耗等）的非线性组合优化，而非简单的线性加权和。该问题常见于多式联运物流的时间--成本--碳排放权衡、金融投资组合中的收益--风险非线性效用、以及应急救援路径规划中的多目标权衡等场景。由于属性间存在非线性交互与非凸性，该类问题常呈现多局部最优与偏好刻画困难等特征\cite{ehrgott2005multicriteria}。
+
+典型方法包括：多目标进化算法（如 NSGA-II）通过逼近帕累托前沿获得多样化解集\cite{deb2002nsga2}；非线性标量化（例如切比雪夫/加权切比雪夫等）将多目标转化为单目标以匹配偏好表达\cite{kim2006adaptive}；以及鲁棒多属性优化在属性参数不确定时刻画最坏情况并给出稳健解\cite{bertsimas2004price}。
+
+\subsubsection{时间依赖型最短路径问题}
+
+时间依赖型最短路径问题（Time-Dependent Shortest Path, TDSP）中，边权是出发时间的函数而非常数，典型应用包括城市交通导航（拥堵随时间变化）与公共交通规划（时刻表约束）等。根据是否允许等待、以及网络是否满足 FIFO 性质，TDSP 的最优子结构与可用算法会发生显著变化\cite{cooke1966shortest,orda1990shortest,dean2005fifo}。
+
+常用求解框架包括：时间扩展图将时间维度离散化并转化为静态图最短路径问题\cite{chabini1998discrete}；以及带时间标签的标签校正/动态规划方法在标签中显式引入到达时间并调整松弛规则，以处理允许等待或分段时变函数的场景\cite{dean2005fifo}。
+
+\subsubsection{随机性与相关性最短路径问题}
+
+随机性与相关性最短路径问题（Stochastic and Correlated Shortest Path, SCSP）中，边权为随机变量且不同边之间可能存在统计相关性（例如相邻路段拥堵相关、天气对多条路段同时施加影响）。根据优化目标不同，可考虑期望值最小化、可靠性最大化或风险度量优化等变体\cite{frank1969probabilistic,nikolova2006approx}。由于需要处理概率分布与相关结构，该类问题通常失去经典的最优子结构并面临高维不确定性建模挑战\cite{birge2011stochastic}。
+
+代表性方法包括：随机规划将问题转化为两阶段或多阶段随机优化\cite{birge2011stochastic}；鲁棒优化在不确定集内寻求最坏情况意义下的最优/可行解\cite{bertsimas2011robust}；以及结合采样的近似与启发式搜索，用以在计算代价与解质量之间折中\cite{nikolova2006approx}。
+
+\subsubsection{路径依赖型最短路径问题}
+
+路径依赖/历史依赖型最短路径问题中，当前边或转移动作的成本不仅由边本身决定，还依赖于已走过的路径历史（例如已访问节点序列、累计资源消耗、转向惩罚、多模式换乘状态等）。这类问题的本质是将状态空间从“节点”扩展为“节点 + 历史/状态”，从而导致状态数爆炸并使一般形式通常达到 NP-hard\cite{gj1979np}。
+
+常见求解思路包括：状态扩展图将历史信息编码到扩展状态中，把路径依赖转化为更高维度的（近似）加性最短路径\cite{thomas2007timepath}；标签算法与支配规则维护部分历史信息并进行支配剪枝，以控制标签数量与搜索规模\cite{irnich2005spprc}；在车辆路径与时间窗等场景中，也常与列生成/分支定价框架结合，将其作为定价子问题或关键子结构来处理\cite{desaulniers2014vrptw}。
+
+\subsection{路径依赖型最短路径问题的经典算法}
+
+在非加性最短路径问题的六大分类中，路径依赖型最短路径问题具有显著的代表性和研究价值。其核心特征是：当前边或转移的成本不仅取决于边本身，还取决于之前经过的路径历史（如已访问节点序列、累计资源消耗、转向惩罚等）。由于路径依赖性的引入，问题状态空间从单一节点扩展为“节点 + 历史路径/状态”的组合，导致状态空间指数级增长，最优子结构性质失效，问题复杂度通常为 NP-hard\cite{gj1979np}。鉴于本文后续研究将聚焦于此类问题，本节重点介绍两类经典求解算法，并分析其局限性，为第三章线图转换方法的引入奠定基础。
+
+\subsubsection{标签算法（Labeling Algorithm）}
+
+标签算法是求解路径依赖型最短路径问题的经典精确方法，其基本思想是为每个节点维护多个标签来表示"到达该节点的不同历史状态"\cite{irnich2005spprc}。为便于描述，设原图 $G=(V,E)$，源点为 $s$，目标点为 $t$。一个标签可抽象为
+\[
+  \ell = (v,\; g,\; \mathbf{r},\; h),
+\]
+其中 $v\in V$ 表示当前节点，$g$ 表示累计成本，$\mathbf{r}$ 表示资源消耗（可为多维），$h$ 表示关键历史信息（例如已访问节点集合、上一步边/转向状态等）。标签算法通过扩展标签生成新标签，并利用支配规则进行剪枝：若在同一节点 $v$ 上，标签 $\ell_A$ 在成本与资源等维度上均不劣于 $\ell_B$，且其历史信息不比 $\ell_B$ 更“受限”（从而任意后续扩展都不会更差），则称 $\ell_A$ 支配 $\ell_B$，可安全删除 $\ell_B$。标签算法的伪代码如算法\ref{algo:pdsp_labeling}所示。
+
+\begin{algorithm}[H]
+  \SetAlgoLined
+  \caption{Labeling Algorithm for Path-Dependent Shortest Path}
+  \label{algo:pdsp_labeling}
+
+  Input: Graph $G=(V,E)$, source $s$, target $t$; transition cost $c(u,v,h)$; state update $h'\!=\!\tau(h,u,v)$; feasibility check $\textsc{Feasible}(\mathbf{r}')$\\
+  Output: Best label reaching $t$ (and its path)\\
+
+  Initialization:\\
+  For each $v\in V$, set label set $\mathcal{L}(v) \leftarrow \emptyset$\\
+  Create initial label $\ell_0=(s,0,\mathbf{0},h_0)$ and insert into $\mathcal{L}(s)$\\
+  Initialize a queue (or priority queue) $Q\leftarrow\{\ell_0\}$\\
+
+  \While{$Q$ is not empty}{
+    Pop a label $\ell=(u,g,\mathbf{r},h)$ from $Q$\\
+    \If{$\ell$ is dominated by some label in $\mathcal{L}(u)$}{
+      continue\\
+    }
+    \For{each outgoing edge $(u,v)\in E$}{
+      $h' \leftarrow \tau(h,u,v)$\\
+      $\mathbf{r}' \leftarrow \textsc{UpdateRes}(\mathbf{r},u,v,h)$\\
+      \If{$\textsc{Feasible}(\mathbf{r}')$}{
+        $g' \leftarrow g + c(u,v,h)$\\
+        Create new label $\ell'=(v,g',\mathbf{r}',h')$\\
+        \If{$\ell'$ is not dominated by labels in $\mathcal{L}(v)$}{
+          Remove from $\mathcal{L}(v)$ all labels dominated by $\ell'$\\
+          Insert $\ell'$ into $\mathcal{L}(v)$ and push $\ell'$ into $Q$\\
+        }
+      }
+    }
+  }
+
+  \Return{the best (minimum-$g$) label in $\mathcal{L}(t)$}\\
+\end{algorithm}
+
+伪代码说明：
+\begin{itemize}
+  \item 标签的含义：同一节点 $v$ 上的不同标签对应不同的“到达方式”，它们携带了导致后续代价差异的历史信息 $h$ 与资源状态 $\mathbf{r}$。
+  \item 扩展与更新：沿边 $(u,v)$ 扩展时，用 $\tau(\cdot)$ 更新历史状态（例如更新“上一条边/转向方向”或把访问节点加入集合），并用 $\textsc{UpdateRes}$ 更新资源消耗；同时用 $c(u,v,h)$ 计算依赖历史的边代价。
+  \item 支配剪枝：在 $\mathcal{L}(v)$ 内做支配判断，保留“潜在更优且更可扩展”的标签，删除明显不可能产生最优解的标签，以减少搜索空间。
+\end{itemize}
+
+方法局限性：尽管标签算法可保证在给定支配规则与状态刻画下找到全局最优解，但标签数量往往随路径长度呈指数增长，导致内存消耗巨大；支配判断本身在多维资源与复杂历史编码下代价较高；并且标签扩展具有强数据相关性，整体过程偏串行，难以直接高效并行化，因而在大规模图或实时场景下计算效率受限。
+
+\subsubsection{列生成与分支定价方法（Column Generation / Branch-and-Price）}
+
+除直接在节点上维护多标签外，路径依赖型最短路径问题在运筹优化中还常被放入“列生成（column generation）/分支定价（branch-and-price）”框架中求解。其核心思想是：不显式枚举所有可行路径，而是把“从 $s$ 到 $t$ 的一条可行路径”视为一个变量（列），在主问题中选择若干列使目标最小；随后通过定价子问题按需生成能够改进目标的路径列。
+
+形式上，可将每条可行路径 $p\in\mathcal{P}$ 赋予成本 $C(p)$（其中 $C(\cdot)$ 可依赖历史/资源/状态演化），令二元变量 $x_p\in\{0,1\}$ 表示是否选择路径 $p$。在只选一条 $s$--$t$ 路径的基本情形下，主问题可写为
+\[
+  \min\ \sum_{p\in\mathcal{P}} C(p)\,x_p,\qquad
+  \text{s.t.}\ \sum_{p\in\mathcal{P}} x_p = 1,\ x_p\ge 0\ (\text{或 }x_p\in\{0,1\}).
+\]
+由于 $|\mathcal{P}|$ 往往极大，列生成从一个小的路径集合 $\mathcal{P}_0$ 开始求解受限主问题（RMP），并根据对偶信息构造“约化成本（reduced cost）”来寻找新的改进列；若考虑整数性，则在分支过程中反复进行列生成，即形成分支定价框架。
+
+\begin{algorithm}[H]
+  \SetAlgoLined
+  \caption{Column Generation Framework for Path-Dependent Shortest Path}
+  \label{algo:pdsp_column_generation}
+
+  Input: Feasible path set $\mathcal{P}$ (implicit), path cost $C(p)$; initial columns $\mathcal{P}_0$\\
+  Output: Best path (integral if solved with branching)\\
+
+  Initialization:\\
+  Set working columns $\mathcal{P}_R \leftarrow \mathcal{P}_0$\\
+
+  \Repeat{no improving column found}{
+    Solve Restricted Master Problem (RMP) over $\mathcal{P}_R$ and get duals $\pi$\\
+    Pricing: find a feasible path $p^*\in\mathcal{P}$ minimizing reduced cost $\bar C(p)=C(p)-\pi$\\
+    \If{$\bar C(p^*) < 0$}{
+      Add $p^*$ into $\mathcal{P}_R$\\
+    }
+  }
+
+  \If{integrality is required}{
+    Apply branching rules and repeat column generation in nodes (branch-and-price)\\
+  }
+
+  \Return{best path implied by final solution}\\
+\end{algorithm}
+
+伪代码说明：该框架将“求解路径依赖最短路径”转化为“迭代求解一个小规模主问题 + 反复解定价子问题”。其中定价子问题本质上是在路径依赖约束/状态演化下寻找约化成本最小的可行路径，常见做法是复用标签扩展与支配剪枝等机制在隐式状态空间中搜索，从而避免枚举全部路径。
+
+方法局限性：列生成/分支定价可在大规模组合优化中获得较强的求解能力，但其计算代价通常集中在反复求解定价子问题与分支树扩展上；当路径依赖导致可行路径结构高度复杂时，定价问题本身可能很难、且需要大量标签与支配判断；此外主问题与子问题之间存在强耦合迭代，整体流程同样具有明显串行瓶颈。
+
+\subsubsection{算法局限性与线图转换的动机}
+
+总体而言，无论是直接在图上进行标签扩展与支配剪枝，还是采用列生成/分支定价这类“主问题--定价子问题”的迭代框架，核心困难都绕不开两点：其一是路径依赖带来的隐式状态空间膨胀，使得标签数、可行路径数或搜索分支数迅速增长，从而带来巨大的时间与内存压力；其二是扩展、支配判断与迭代求解具有强数据相关性与顺序依赖，导致并行化与工程落地难度较高。
+
+针对上述局限，本文引入线图（Line Graph）转换作为后续的求解思路：线图将原图的边转化为节点，并将“相邻边之间的依赖关系”显式编码为线图节点间的连接关系，从而把部分路径依赖信息结构化地映射到图结构中。相较于在隐式状态空间中维护大量标签或反复求解定价问题，线图转换在规模增长的可控性、结构规则性以及并行实现方面更具潜力。第三章将系统阐述线图转换的理论基础、算法设计与并行优化策略。
+
+\section{线图理论基础}
+
+在路径依赖型最短路径问题（Path-dependent Shortest Path Problem）中，路径的整体代价不仅取决于单条边的独立权重，还与相邻边之间的组合与连接状态密切相关。传统的图拓扑结构以节点为核心，难以直接刻画边与边之间的动态耦合关系。为了将这种隐藏的“边关系”显式化，引入结构转换机制成为一种有效的解决途径。线图（Line Graph）作为一种经典的图转换方法，通过实现图元素角色的对偶转换，已在图论及复杂网络优化领域得到广泛应用\cite{whitney1932congruent,harary1960some,van1965interchange}。本节将系统梳理线图的基本定义、构造范式及其拓扑性质，为后续求解算法的设计提供坚实的理论支撑。
+
+\subsection{线图的定义}
+
+设原图（或称底层图）为 $G = (V,E)$，其中 $V$ 为顶点集合，$E$ 为边集合。其对应的线图记为 $L(G) = (V',E')$，具体的映射定义如下\cite{whitney1932congruent}：
+
+\begin{itemize}
+  \item 线图 $L(G)$ 的顶点集合 $V'$ 与原图 $G$ 的边集合 $E$ 存在双射关系，即原图中的每一条边均转换为线图中的一个独立顶点：
+  $$ V' = E $$
+  \item 若原图 $G$ 中的两条边具有公共端点（即存在邻接关系），则在转换后的线图 $L(G)$ 中，这两个对应的顶点之间存在一条连接边。
+\end{itemize}
+
+针对有向图情形，该映射规则可进一步严格化\cite{harary1960some}：设原图存在有向边 $e_1 = (u,v)$ 与 $e_2 = (v,w)$，当且仅当 $e_1$ 的终点与 $e_2$ 的起点重合时，在线图 $L(G)$ 中生成一条由节点 $e_1$ 指向节点 $e_2$ 的有向边 $(e_1, e_2)$。
+
+综上所述，线图变换的核心在于“化边为点”，将原图隐式的边序关系投射为线图中的显式的节点邻接关系，从而实现路径组合特征的降维与结构化表示。
+
+\subsection{线图的构造过程}
+
+对于任意给定的有向图 $G = (V,E)$，其线图 $L(G)$ 的标准化构造流程可归纳为以下步骤：
+
+\begin{enumerate}
+  \item 节点生成：遍历原图边集 $E$ 中的每一条有向边 $e = (u,v)$，在线图 $L(G)$ 中实例化一个对应的顶点；
+  \item 关系重构：考察原图中的任意边对 $e_1 = (u,v)$ 与 $e_2 = (v,w)$，若两者满足拓扑连通条件（即前驱边终点为后继边起点），则在 $L(G)$ 中添加一条有向边 $(e_1, e_2)$；
+  \item 拓扑闭合：穷举原图的所有邻接边对，重复上述操作，直至构建出完整的线图邻接矩阵。
+\end{enumerate}
+
+通过上述变换机制，原图中步长为2的局部路径结构（如 $u \rightarrow v \rightarrow w$）被无损压缩为线图中的单条有向边。从空间映射的视角来看，线图本质上是对原图局部路径演化空间的一种高阶展开\cite{van1965interchange}。
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+    >=Latex,
+    node distance=22mm,
+    every node/.style={circle,draw,minimum size=6mm,inner sep=0pt},
+    every edge/.style={draw,->,line width=0.4pt}
+  ]
+    % Original Graph G
+    \begin{scope}[xshift=0cm]
+      \node (A) {u};
+      \node (B) [right=of A] {v};
+      \node (C) [right=of B] {w};
+      
+      \path (A) edge node[above,draw=none] {$e_1$} (B)
+            (B) edge node[above,draw=none] {$e_2$} (C);
+      
+      \node[draw=none,below=1.5cm of B] {\textbf{原图:} $G$};
+    \end{scope}
+    
+    % Arrow indicating transformation
+    \node[draw=none] (arrow) at (5.5, 0) {\Large $\Rightarrow$};
+    
+    % Line Graph L(G)
+    \begin{scope}[xshift=7cm]
+      \node (E1) {$e_1$};
+      \node (E2) [right=of E1] {$e_2$};
+      
+      \path (E1) edge node[above,draw=none] {$(e_1,e_2)$} (E2);
+      
+      \node[draw=none,below=1.5cm of E1,xshift=10mm] {\textbf{线图:} $L(G)$};
+    \end{scope}
+
+  \end{tikzpicture}
+  \caption{有向图及其线图的构造转化示例}
+  \label{fig:line_graph_example}
+\end{figure}
+
+\subsection{线图的拓扑性质}
+
+线图在拓扑结构层面呈现出若干关键性质，这些性质是后续算法设计的核心依据：
+
+（1）拓扑规模扩张性
+
+线图的节点规模严格等于原图的边规模，即：
+$$ |V(L(G))| = |E(G)| $$ 
+由于实际网络（如交通网、通信网）通常满足 $|E| \gg |V|$，线图变换会导致图规模的非线性扩张。这一特性提示我们在算法设计时，必须考量由于状态空间膨胀带来的存储与计算开销问题。
+
+（2）邻接语义的重定义
+
+在线图空间中，“邻接关系”不再表征地理或物理节点的直接连通，而是刻画原图中不同路段之间的“时空衔接连贯性”。这使得线图具备了捕获原图高阶路径结构特征的能力。
+
+（3）路径结构的同构映射
+
+原图空间中的任意一条可行路径：
+$$ P_G = v_1 \rightarrow v_2 \rightarrow \cdots \rightarrow v_k $$ 
+在线图空间中存在唯一对应的一条路径：
+$$ P_{L(G)} = (v_1,v_2) \rightarrow (v_2,v_3) \rightarrow \cdots \rightarrow (v_{k-1},v_k) $$ 
+这种严格的同构映射不仅保证了路径连通性的无损传递，也确保了在双域间进行最优性检索的等价性。
+
+（4）依赖信息的显式表征优势
+
+由于线图的顶点直接关联原图的边，研究者可在线图顶点或连边上灵活挂载多维属性矩阵。例如，可将转弯延误、路口惩罚或复杂的边际交互成本直接编码为线图的边权。这一性质从根本上消除了经典图结构在处理“非马尔可夫型”路径成本时的表达瓶颈。
+
+\subsection{线图在最短路径求解中的应用机理}
+
+在经典最短路径范式中，路径评价体系通常遵循严格的线性可加性假设。然而，在面对包含复杂转弯限制或状态相依成本的非加性网络时，贝尔曼最优性原理（Bellman's Principle of Optimality）往往失效，导致 Dijkstra 等传统算法难以直接适配。
+
+引入线图理论可实现问题域的降维重构。具体映射机理如下：
+
+\begin{itemize}
+  \item 状态转移：将原图难以处理的“边间耦合约束”转化为线图中常规的“节点与边权属性”；
+  \item 成本线性化：将非加性的路径依赖成本吸收进线图的拓扑结构中，使得转换后的线图重新满足权值累加原则。
+\end{itemize}
+
+经过此类同构变换，复杂的路径依赖型最短路径问题被优雅地还原为线图空间下的标准最短路径问题。此时，不仅传统的高效路由算法能够重新发挥效用，且线图本身高度规则的矩阵特征也为引入现代并行计算框架（如 GPU 加速）创造了有利条件。
+
+值得注意的是，若非加性成本不仅仅取决于前一条边，而是依赖于前 $k$ 条边的路径历史，则此类问题可以通过构造高阶线图（Higher-order Line Graph，记为 $L^{[k]}(G)$）来解决。高阶线图通过迭代转换，将长为 $k$ 的边序列压缩为单个节点，从而能精确结构化表达具有有限阶局部马尔可夫性质（即 $k$-加性）的复杂路径代价。
+
+\section{CUDA并行框架概述}
+
+为了求解由线图经过规模扩张后的非加性最短路径问题，利用图形处理器（GPU）强大的高并发特性成为提升算法效率的关键。CUDA（Compute Unified Device Architecture）是由 NVIDIA 推出的通用并行计算架构，它通过提供一套统一的软硬件计算框架，使得开发者能够使用 C/C++ 等高级语言直接对 GPU 进行编程，从而将传统的串行复杂图计算任务转化为高度并行的软硬件协同计算。
+本节将简要介绍与后续算法设计密切相关的 CUDA 软件架构及其硬件编程模型。
+
+\subsection{CUDA 软件架构}
+
+CUDA 的软件架构在逻辑上基于统一和分层的设计理念，向开发者屏蔽了底层 GPU 硬件的复杂性。其核心思想是“异构计算（Heterogeneous Computing）”，即 CPU 与 GPU 协同工作，各司其职：
+\begin{itemize}
+    \item \textbf{主机（Host）}：通常指代 CPU 及其内存系统。主机端主要负责处理那些复杂的逻辑控制流、串行计算任务以及任务的调度与资源分配。在最短路径求解任务中，主机负责数据预处理（如线图转换）、内存分配及输出结果的回收。
+    \item \textbf{设备（Device）}：通常指代 GPU 及其内存（如全局显存等）。设备端被视作一个高度并行的协处理器，接收来自主机端的数据和计算指令。它主要负责执行拥有极高计算密度和高度并行性的任务，例如大规模图结构中数以万计的节点松弛操作及边权重更新。
+\end{itemize}
+主机程序通过调用 CUDA 提供的运行时 API（Runtime API）或驱动 API（Driver API），向设备端分发名为“核函数（Kernel）”的并行计算代码，进而触发 GPU 的算力释放。
+
+\subsection{GPU 编程模型与内存结构}
+
+在实际的编程模型中，CUDA 将 GPU 计算抽象为多层级的线程组织架构以及层次化存储结构，以适配网络图结构的不同层次访问需求。
+
+\begin{enumerate}
+    \item \textbf{线程组织架构}：CUDA 中的最小执行单元是线程（Thread）。在执行一个 Kernel 时，这些线程被组织起来。若干个线程组成一个线程块（Block），线程块内可以通过共享内存和同步屏障机制实现高效协作；多个并行运算的线程块共同集成一个网络（Grid）。对于最短路径图算法，可以把源点集合或者边集合细粒度地分配给每一个线程或线程块并发处理。
+    \item \textbf{层次化内存空间}：为了提升数据吞吐量，CUDA 提供多种存储方式：
+    \begin{itemize}
+        \item \textbf{全局内存（Global Memory）}：容量最大，主从设备皆可访问，常用于存放整个底层的线图拓扑（如邻接表和权重集）和节点的距离数组。
+        \item \textbf{共享内存（Shared Memory）}：位于线程块内部，是一种在Block内的低延迟片上存储介质。在执行松弛迭代时，可将局部更新密集的队列或临时变量放入其中缓冲，大幅降低拉取全局内存的访存延迟。
+        \item \textbf{寄存器（Registers）}：每个线程所独占的最快缓存，存储线程执行时的私有上下文变量。
+    \end{itemize}
+\end{enumerate}
+
+通过上述多线程的阵列调度与多层级的访存优化，基于 CUDA 的并行求解能够实现极高的图计算吞吐率。这不仅能有效抵消“线图拓扑扩张”带来的额外性能开销，更从根本上为现代非加性最短路径问题的高效求解提供了强大的物理算力支撑。
+
+\section{本章小结}
+
+本章先回顾了图的基本概念与加性最短路径的经典定义和算法，再形式化给出非加性最短路径问题及其失效机理，归纳现实应用中的普适性与问题类型；随后总结了改写松弛、线图/状态扩展、动态规划及并行近似等求解思路，并介绍了线图转换要点与CUDA并行框架。通过上述讨论不难发现，现实网络中大量存在的路径依赖型惩罚（如交规转弯限制等），在本质上符合局部马尔可夫性质与有限阶加性（$k$-additive）特征。这也意味着，利用线图及其高阶扩展不仅能有效地捕获此类非加性约束并将其转化为标准的静态模型结构，且高度匹配现代GPU并行的计算范式。正是基于这种理论上的天然契合，下一章将以此为切入点，针对具体的 $k$-加性非加性场景进行更深入的框架设计与相应的并行优化。

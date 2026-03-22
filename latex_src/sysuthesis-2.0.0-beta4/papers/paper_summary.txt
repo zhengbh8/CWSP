@@ -1,0 +1,1468 @@
+Citation: Durand, A.; Watteau, T.;
+Ghazi, G.; Botez, R.M. Generalized
+Shortest Path Problem: An Innovative
+Approach for Non-Additive Problems
+in Conditional Weighted Graphs.
+Mathematics 2024, 12, 2995. https://
+doi.org/10.3390/math12192995
+Academic Editor: Andrea Scozzari
+Received: 26 July 2024
+Revised: 14 September 2024
+Accepted: 21 September 2024
+Published: 26 September 2024
+Copyright: © 2024 by the authors.
+Licensee MDPI, Basel, Switzerland.
+This article is an open access article
+distributed under the terms and
+conditions of the Creative Commons
+Attribution (CC BY) license (https://
+creativecommons.org/licenses/by/
+4.0/).
+mathematics
+Article
+Generalized Shortest Path Problem: An Innovative Approach for
+Non-Additive Problems in Conditional Weighted Graphs
+Adrien Durand ∗, Timothé Watteau
+ , Georges Ghazi ∗
+ and Ruxandra Mihaela Botez ∗
+Laboratory of Applied Research in Active Control, Avionics and AeroServoElasticity (LARCASE), École de
+Technologie Supérieure (ÉTS), Université de Québec, Montréal, QC H3C 1K3, Canada; timothe.wt@gmail.com
+* Correspondence: adrien.durand1709@gmail.com (A.D.); georges.ghazi@etsmtl.ca (G.G.);
+ruxandra.botez@etsmtl.ca (R.M.B)
+Abstract: The shortest path problem is fundamental in graph theory and has been studied extensively
+due to its practical importance. Despite this aspect, finding the shortest path between two nodes
+remains a significant challenge in many applications, as it often becomes complex and time consuming.
+This complexity becomes even more challenging when constraints make the problem non-additive,
+thereby increasing the difficulty of finding the optimal path. The objective of this paper is to
+present a broad perspective on the conventional shortest path problem. It introduces a new method
+to classify cost functions associated with graphs by defining distinct sets of cost functions. This
+classification facilitates the exploration of line graphs and an understanding of the upper bounds on
+the transformation sizes for these types of graphs. Based on these foundations, the paper proposes
+a practical methodology for solving non-additive shortest path problems. It also provides a proof
+of optimality and establishes an upper bound on the algorithmic cost of the proposed methodology.
+This study not only expands the scope of traditional shortest path problems but also highlights their
+computational complexity and potential solutions.
+Keywords: universal shortest path problem; line graphs; graph cost functions; optimization techniques
+MSC: 68R10
+1. Introduction
+Among the wide range of challenges addressed in graph theory, the problem of finding
+the shortest path between two nodes (or vertices), commonly known as the shortest path
+problem (SPP), is one of the most fundamental and most widely studied. Indeed, a variety
+of real-world problems, ranging from network routing in communication systems [ 1],
+robotics [2], transportation logistics [3,4] and trajectories optimization [5–9], depend on the
+efficient resolution of the SPP . In fact, regardless of the application context, the problem can
+always be formulated to determine a path between two vertices of the graph that minimizes
+the sum of the weights of the edges that compose it. Although this is a universal problem,
+solving the shortest path remains a topic of interest for many researchers.
+Over several decades, Dijkstra’s algorithm, introduced by Edsger W. Dijkstra in
+1956 [10], and the A* algorithm, developed by Peter Hart, Nils Nilsson, and Bertram
+Raphael in 1968 [11], have been used as fundamental methods for solving the SPP . Basically,
+Dijkstra’s algorithm finds the shortest path from a starting node to all other nodes in a
+weighted graph by iteratively selecting the node giving the smallest known distance and
+by updating the distances to its neighboring nodes. The A* algorithm, on the other hand,
+can be seen as an improvement of Dijkstra’s algorithm, as it uses heuristics to prioritize
+paths that appear to be the smallest, thus often finding the shortest path more efficiently.
+While practical in many problems, these algorithms can unfortunately be computationally
+expensive and slow for very large graphs, particularly when there are complex constraints
+Mathematics 2024, 12, 2995. https://doi.org/10.3390/math12192995 https://www.mdpi.com/journal/mathematics
+Mathematics 2024, 12, 2995 2 of 24
+between nodes and segments. These algorithms can also be inefficient, or even fail to find a
+solution, when the cost function to be minimized is non-additive.
+The difficulty of solving the SSP is not always due to the choice of the optimization
+algorithm, but rather to the way in which the problem is defined. Loui [ 12] highlighted
+this issue by criticizing the rigidity of classical SPP models and pointed out the relevance
+of incorporating probabilistic weights in these methods under certain circumstances. To
+address this problem, two solutions were proposed: (1) minimizing the expected values of
+the weights, and (2) setting bounds for each weight and minimizing a combined function.
+Another solution proposed by Loui was the use of dynamic programming, which consists
+of solving a problem by dividing it into sub-problems, then solving these sub-problems
+incrementally from the simplest to the most complex, storing their intermediate results.
+The use of weighted graphs with random variables, instead of predetermined fixed
+variables, is a common approach in the literature. This approach was used by Raj et al.
+in [13] to improve the safety of hazardous goods transport routes. Their objective was to
+identify the safest path in a graph, while imposing a variance constraint to mitigate paths
+with excessive uncertainties. In fact, the modeling of the variance is particularly interesting
+from an optimization point of view, as it does not reduce the cost function to a simple sum
+of weights. Indeed, the variance, which is quadratic by nature, requires a more complex
+calculation and can be determined for each path p using a binary vector x ∈ [0, 1]|E|, such
+that xα = 1 if α ∈ p, or xα = 0 otherwise. Starting from this definition, the variance of a path
+can be computed using the covariance matrix Q = [ qα,β] ∈ R|E|×|E|, which is symmetric
+and positive definite, with rows and columns indexed by the segments of the graph. The
+interaction cost between two arcs α and β is reflected by the sum of the off-diagonal entries
+qα,β + qβ,α, while the linear cost of an arc γ is represented by the diagonal element qγ,γ. The
+variance of a path p is then obtained by using the formula: Var(p) = xTQx.
+While Raj et al. [13] treated the variance as a constraint, Sen et al. [14] considered it as a
+component of the cost function (or as the cost function itself). In their study, which focused
+on the application of a shortest path algorithm for road traffic, they implemented a multi-
+objective optimization to balance the expected travel time and its variance. The concept
+of considering a cost function of the form f (p) = xTQx is referred to as the quadratic
+shortest path problem (QSPP). Hu and Sotirov in [15] proposed a solution to this problem
+using semi-definite programming relaxation methods for directed graphs. They used the
+alternating direction method of multipliers to find solutions and demonstrated that their
+bounds were the strongest for this problem at that time. Many methods have also been
+effective in addressing the QSPP , such as proposed by Rostami et al. [16,17] and by Hu [18].
+In several studies, the weighting of segments in shortest path calculations has been
+treated using random variables. This technique is typically used when it is difficult to
+predetermine the weights of segments in a graph. Weiss and Kaminka [ 19] proposed a
+slightly different modeling approach by exploring shortest path computation techniques
+when obtaining the exact segment weights is algorithmically expensive. To deal with this
+complexity, they approximated the weights with a certain level of confidence using a cost
+estimation function that provides bounds on the actual value of the weights. However,
+this approach, while practical, requires the development of a shortest path algorithm that
+works with these estimated weights, which may affect the optimality of the solution.
+Turner and Hamacher in [20] introduced the concept of the universal shortest path
+problem (USPP). This concept consists of incorporating and then extending previously
+known variants, such as the largest edge cost (bottleneck SSP) and the difference between
+the largest and smallest edge cost (balanced SPP). In a subsequent study [ 21], Turner
+developed strongly polynomial-time algorithms to solve the USPP with equality constraints.
+These efforts highlight the continuous evolution and diversification of methodologies to
+address the complex challenges posed by shortest path problems.
+An alternative modeling approach for addressing the SPP involves considering graph
+weights not as real scalar values but as vectors. This vector-based method, adopted by
+Jiang et al. [22], assigns distinct physical meanings to each vector component. For instance,
+Mathematics 2024, 12, 2995 3 of 24
+in the context of a road network, vector weights might represent the length of a road
+segment, the degree of congestion, and the probability of delays. The SPP can then be
+solved by using a cost function that mathematically combines the vector components,
+reducing it to a traditional cost function. However, this approach does not offer any
+significant improvements; it simply organizes the data differently while solving the SPP
+using Dijkstra’s or A* algorithms. It is therefore more adapted for multi-objective problems,
+where the objective is to optimize multiple criteria as considered by Salzman et al. in [23]
+to solve the SPP with two objective functions using heuristic methods. The vector-based
+approach may seem trivial, because once the problem is modeled as a weighted graph with
+associated quantities, engineers can easily apply standard physical formulas to derive a
+relevant cost. However, the real challenge often lies in the initial modeling of the problem
+as a weighted graph, for which this approach does not provides solutions.
+Vidhya and Saraswathi [24] addressed the SPP under fuzzy conditions using trape-
+zoidal intuitionistic fuzzy numbers (TrIFNs). These TrIFNs were used to model the uncer-
+tainties and inaccuracies associated with the arcs in a graph. The problem was formulated
+as a bi-objective problem: minimizing costs and travel time. Each arc of the graph was
+associated with a fuzzy cost ˜cij and a fuzzy time ˜tij.
+The literature review clearly shows that in the majority of studies (if not all), a rigid
+representation of the shortest path problem has always been considered. No current
+approach envisages a weighting system that considers the position of a segment in the
+graph, such as adapting the weights depending on the previous nodes (or segments) on
+the path. It has also been observed that the shortest path problem and its variants offer
+numerous opportunities for research and application. However, despite the popularity
+of the problem, the costs associated with a path are typically computed in only three
+ways: through (1) additive scalar cost functions of the form f (p) = ∑α∈p cα, (2) quadratic
+scalar cost functions f (p) = xTQx, or (3) cost functions that incorporate vector weights.
+Consequently, it seems both interesting and necessary to generalize the cost functions or
+the methods of weighting the graphs to a wider range of problems.
+This paper proposes to extend the concept of cost functions in traditional SPPs by
+including non-additive functions. It provides a classification of these functions and intro-
+duces a method for solving the SPP using a non-additive cost function with conditional
+weighting. Driven by practical engineering needs, the method is applied to a specific case
+within the aeronautical sector. In this case study, the integration of geometric constraints
+requires the use of non-additive cost functions, illustrating the practical application and
+relevance of the proposed method.
+The remainder of this paper is organized as follows: In Section 2, the notations used
+throughout the paper are clarified. In Section 3, different types of cost functions are
+classified by introducing new elements of analysis for finite graphs. The application of
+the line graph and the estimation of the graph size following a sequence of iterated line
+graphs are explored in Section 4. Insights from the previous sections are then combined in
+Section 5 to optimally solve the shortest path problem using a k-additive cost function. An
+application example highlighting the relevance of this method is presented in Section 6.
+The paper concludes with final remarks and conclusions in the last section.
+2. Notations for Graphs
+Two types of graphs are considered in this study: undirected graphs and directed
+graphs (or digraphs). These sets will be denoted as G and Gd, respectively. Basically, a
+graph G ∈ G can be defined as a set of vertices (or nodes) V connected by a set of edges
+(or segments) E, and is mathematically denoted as G = ( V, E). A digraph is a type of
+graph where the edges have a direction associated with them. This aspect means that the
+connections between vertices are not bidirectional, as in a undirected graph, but follow a
+specific direction from one vertex to another.
+To distinguish edges from vertices, the following notations are used: vertices are
+represented by lowercase Latin letters (e.g., u, v, etc.), while edges are represented by
+Mathematics 2024, 12, 2995 4 of 24
+lowercase Greek letters (e.g., α, β, etc.). Based on these notations, the following properties
+can be established:
+• If G ∈ G is an undirected graph, the vertices that constitute an edge are interchangeable.
+Thus, any edge α ∈ E defined as a set of nodes such as α = {u, v} with u, v ∈ V,
+can be equivalently expressed as α = {v, u}. Consequently, an edge is a subset of V
+composed of two elements.
+• If G′ ∈ G d is a digraph, an edge can be seen as an ordered pair of two elements that are
+obviously not interchangeable. Consequently, for any edge α ∈ E defined as α = (u, v)
+with u, v ∈ V, a direction must be specified. For this purpose, the first element of the
+directed edge, α1 = u, is referred to as the tail of the edge α, while the second element,
+α2 = v, is referred to as the head of the edge α.
+Both directed and undirected graphs can be weighted. A weighted graph is defined as
+G = (V, E, w) where w : E → R is a function that assigns a real weight to each edge.
+Finally, the set of neighbors of a vertex is denoted as N (v), and is defined as follows:
+N (v) = {u ∈ V|(v, u) ∈ E}. This set includes all vertices u that are directly connected to
+the vertex (or node) v by an edge in the graph.
+3. Classification of Graph Cost Functions
+As discussed in Section 1, the effectiveness of solving the SPP depends not only on the
+definition of the graph, but also on the nature of the cost function. This function is essential
+for mathematically evaluating the efficiency of a path in terms of metrics to be minimized.
+The objective of this section is to define three categories of cost functions applicable to any
+SPP: (1) additive, (2) non-additive, and (3) k-additive. In addition, this section provides
+mathematical definitions to characterise these categories using techniques of differential
+analysis on finite graphs.
+3.1. Elements of Differential Analysis on a Finite Graph
+Calculus on finite weighted graphs is a well-studied field. Dodziuk [ 25] initiated
+the study of the Laplacian operator in the discrete domain, highlighting several proper-
+ties of the continuous operator that transfer well to discrete representation. Subsequent
+work by Woess [26] and McDonald and Meyers [27] further developed this framework by
+considering the spaces of vertex or edge functions as a Hilbert space H. This approach
+involves defining an inner product in H(V) and H(E), which facilitates the application of
+calculus concepts. The mathematical tools developed in these studies also allow the use
+of differential operators, such as the weighted graph derivative ∂xi f (xj), or the weighted
+gradient (∇w) and divergence (∇∗
+w), respectively, defined as ∇w f (xi, xj) = ∂xi f (xj) with
+f ∈ H (V) and ⟨ f , ∇∗
+wF⟩H(V) = ⟨∇w f , F⟩H(E) with F ∈ H (E).
+In this study, various concepts from differential calculus are applied to graphs in
+order to characterize both the structure of the graph and its associated cost function. For
+further information on this subject, readers are referred to the studies of Friedman and
+Tillich [28–30]. These studies introduce a specialized form of “calculus” for graphs, allow-
+ing graph theory to make new connections with functional analysis. Such an innovative
+approach has been applied effectively in various domains, including image processing,
+machine learning, and network analysis [31–34].
+Let f : P → R+ be a cost function associated with a graph G, where P denotes
+the set of all paths in G = ( V, E). A path p ∈ P is an ordered list of nodes (or vertices)
+without repetition, such that any two consecutive nodes in the list are connected by an edge.
+Consequently, it can be written that E ⊂ P . Also, given the absence of node repetition in
+any path, the number of possible paths is finite, i.e., |P | < ∞.
+We can introduce the space of real path functions H(P ), which is a |P |-dimensional
+Hilbert space such as:
+H(P ) = { f : P → R} (1)
+Mathematics 2024, 12, 2995 5 of 24
+The variations of f ∈ H (P ) can be analysed by examining the function ∂ f (i.e., the
+differential of f ) which can be defined as follows:
+∂ f : E × P → R
+(α, p) 7→ ∂ f (α|α ˜∈p) = f (α ˜∈p) − f (p \ α) (2)
+where α ˜∈ p means that the edge α is included in the path p, and f (p \ α) refers to the
+evaluation of the cost function on the edges of p excluding the edge α.
+Equation (2) can be re-written as:
+∂ f (α|p1αp2) = f (p1αp2) − ( f (p1u1) + f (u2p2)) , α = (u1, u2) (3)
+to express the variation of f with respect to an edge α ˜∈p that connects two paths p1 and p2
+within P, such that p = p1αp2. This equation is useful to describe the effect of including
+the edge α in a given path p.
+Similarly, Equation (4):
+∆i=1,2∂ f (α|piα) = |∂ f (α|p1α) − ∂ f (α|p2α)| (4)
+can be used to quantify the difference in ∂ f between two paths p1α and p2α sharing the
+same “terminal” edge α. This equation is useful to compare the effect of connecting the
+edge α to two given paths, p1 and p2.
+Finally, using the mathematical definitions introduced in this section, we can establish
+the following property for a generalized cost function f .
+Property 1. The cost function f can be expressed as the sum of its local differentials by considering
+the complete path p, such that:
+f (p) = ∑
+α ˜∈p
+∂ f (α|p) (5)
+This representation of f is referred to as the “differential form of f ”.
+3.2. Additive and Non-Additive Cost Functions
+In graph theory, an additive cost function is a function where the total cost is “simply”
+the sum of individual costs associated with each edge that compose a path. This type of
+function is commonly used in problems where the cost can be incrementally accumulated
+without considering the interaction between edges or nodes.
+Mathematically, an additive cost function can be defined on the graph setP as follows:
+f ∈ FG(0) with FG(0) = { f ∈ H (P )|∀p, α ∈ P × E, ∆i∂ f (α|pi) = 0} (6)
+FG(0) is then the set of additive cost function. Based on this definition, a non-additive cost
+function is any cost function associated with graph G that does not belong to the set FG(0),
+such that:
+f /∈ FG(0) ⇒ f ∈ FG(0) (7)
+3.3. k-Additive Cost Function
+A k-additive cost function generalizes additive cost functions and refines the concept
+of non-additive cost functions by incorporating interactions among up to k components of
+a path. In other words, a k-additive cost function is a function for which the value of the
+cost is influenced by interactions among up to k components. Interactions beyond the kth
+component are assumed to be negligible or zero. This type of cost function is particularly
+useful in problems where the cost associated with an edge in a graph is primarily influenced
+by the properties of adjacent edges.
+In addition, the k-additivity nature of a cost function can be oriented. Therefore, we
+can categorize the following three sets according to their orientation:
+Mathematics 2024, 12, 2995 6 of 24
+Definition 1. The k-additive on the left cost function set:
+FL
+G(k) := { f ∈ H (P )|∀p, α ∈ P × E| l(p) ≥ k ⇒ ∆i∂ f (α|qi pα) = 0} (8)
+Definition 2. The k-additive on the right cost function set:
+FR
+G(k) := { f ∈ H (P )|∀p, α ∈ P × E| l(p) ≥ k ⇒ ∆i∂ f (α|αpqi) = 0} (9)
+Definition 3. The k-additive on the left and right cost function set:
+FLR
+G (k) :=
+(
+f ∈ H (P )|∀p1, p2, α ∈ P 2 × E|
+(
+l(p1) ≥ k
+l(p2) ≥ k ⇒ ∆i∂ f (α|qi p1αp2q′
+i) = 0
+)
+(10)
+We now understand that an additive cost function FG(0) is a 0-additive cost function.
+Specifically, if in the definition it is found that l(p) = 0, this indicates that p is an empty
+path, which is in line with the definition given in Equation (6)
+The main concepts presented in this section are illustrated in Figure 1, which represents
+a section of a graph G.
+(a)
+ (b)
+Figure 1. Representation of differential analysis tools on finite graph. (a) Representation of ∆∂ f (α|p).
+(b) Representation of the condition that f ∈ FL(k).
+Figure 1a illustrates the difference in ∂ f along the edge α between two paths q1 and
+q2. Figure 1b, on the other hand, shows that if ∂ f on edge α remains constant when
+coming from two distinct paths q1 and q2, both distant by k nodes, then the cost function
+is k-additive. Specifically, the equality between f (q1pα) − f (q1p) and f (q2pα) − f (q2p),
+representing the differential of f on the edge α from paths q1p and q2p (i.e., ∂ f (α|q1p) and
+∂ f (α|q2p), respectively), confirms these k-additive characteristics.
+Property 2. Let us consider the three setsFL
+G(k), FR
+G(k) and FLR
+G (k), as defined inEquations (8)–(10).
+Thus, we can write:
+∀k ∈ N :
+
+
+
+FL
+G(k)⊆FL
+G(k + 1),
+FR
+G(k)⊆FR
+G(k + 1),
+FLR
+G (k)⊆FLR
+G (k + 1)
+(11)
+Proof of Property 2. Let f ∈ FL
+G(k). By Definition 1 ofFL
+G(k) given in Equation (8),we have:
+∀p, e | l(p) ≥ k, ∆i∂ f (qi pe) = 0 (12)
+This expression states that for any path p and node e where the length of p (i.e.,
+l(p)) is at least k, the variation ∆i in the partial derivative ∂ f of the function f along the
+concatenated path qi pe equals zero.
+Mathematics 2024, 12, 2995 7 of 24
+We define p′ = vp with p = p1 . . . pk, and p1 ∈ N (v), which implies p′ ∈ P and
+l(p′) = k + 1. Therefore, we have:
+∆i∂ f (q′
+i p′e) = ∆i∂ f (q′
+ivpe ) (13)
+Given that q′′
+i = q′
+iv, ∀i, it follows that:
+∆i∂ f (q′
+i p′e) = ∆i∂ f (q′′
+i pe) (14)
+Or, ∆i∂ f (q′′
+i pe) = 0, which implies that f ∈ FL
+G(k + 1). This sequence of equalities
+demonstrates that the function f , which shows no change in differential after extending the
+path beyond k nodes, belongs to FL
+G(k + 1).
+For FR
+G(k) ⊆ FR
+G(k + 1), and FLR
+G (k) ⊆ FLR
+G (k + 1) the proof is conducted with the
+same methodology and inverting path order.
+Using the mathematical expressions and properties defined above, we can now repre-
+sent a cost function as the sum of its local variations, as detailed in Property 3.
+Property 3. f ∈ FG(k) is k-additive because we can reduce its differential form (c.f. Equation (5))
+to a sum of terms with the path considered being only k nodes long :
+f (p) = f (p1 . . . pk) +
+l(p)−1
+∑
+i=k
+∂ f (pi, pi+1|pi+1−k . . . pi+1) (15)
+This formulation is particularly useful for shortest path problems when the cost functions are non-
+additive. By using the local variations, we can better understand how the costs accumulate along
+the different segments of a path, even when the overall cost function is not simply the sum of the
+costs of each segment.
+There are certain cases where the form of the cost function adds complexity to solving
+the shortest path problem. This complexity arises when the variations in the cost function
+depend on paths of arbitrary lengths. Such a situation occurs with k-additive functions
+when k→ ∞. This set of functions, which includes all other sets of functions, represents the
+most challenging category to analyze within this context.
+Definition 4. The general cost function set on G can be defined as:
+FX
+G(∞) := FX
+G(k)
+[
+FX
+G(k), ∀k ∈ N, X ∈ { L, R, LR} (16)
+Using Definition 4, we can conclude that if a function belongs exclusively to FX
+G(∞)
+and to no other defined set of functions, it cannot be solved using the methods presented
+in this paper for the shortest path problem.
+3.4. Examples of Classification
+Here, we provide two examples of cost functions which can be classified based on the
+definitions proposed in the previous sub-sections.
+3.4.1. A Classical FG(0) Function
+Let us consider that each edge α ∈ E of a graph G is associated with a weight wα. A
+classical and trivial cost function would be to compute the cost of a path by summing the
+weights of its constituent edges. This cost function is commonly used in many shortest
+path problems. Although it is a simple model, it is often sufficient to solve the problem
+under consideration. It can be defined as follows:
+Mathematics 2024, 12, 2995 8 of 24
+f (p) = ∑
+α ˜∈p
+wα (17)
+Given the structure of the cost function, it can be easily demonstrated that f ∈ FG(0),
+meaning that f is additive.
+3.4.2. A Simple General FL
+G(k) Function
+Let us consider the sliding product window function fn, defined such that:
+fn(p) =
+l(p)−n
+∑
+i=1
+ 
+i+n
+∏
+k=i
+pk
+!
+(18)
+where pk ∈ R.
+Property 4. Using the definition proposed in Section 3.3, it can be shown that:
+fn(p) ∈ FL
+G(n) ∩ FL
+G(n − 1). (19)
+Proof of Property 4. Let α = ( u1, u2) ∈ E, and p = p1 . . . pl(p) : pi ∈ V. Using the
+definition of fn(p) in Equation (18), fn(pα) can be developed as follows:
+fn(pα) =
+l(p)−n
+∑
+i=1
+ 
+i+n
+∏
+k=i
+pk
+!
++ u1
+
+
+l(p)
+∏
+k=l(p)−n+1
+pk
+
+ + u1u2
+
+
+l(p)
+∏
+k=l(p)−n+2
+pk
+
+
+= fn(p) + u1
+
+
+
+
+l(p)
+∏
+k=l(p)−n+1
+pk
+
+ + u2
+
+
+l(p)
+∏
+k=l(p)−n+2
+pk
+
+
+
+
+(20)
+Then, by using the definition of ∂ f given in Equation (2), we can write:
+∂ fn(α|pα) = fn(pα) − fn(p)
+= u1
+
+
+
+
+l(p)
+∏
+k=l(p)−n+1
+pk
+
+ + u2
+
+
+l(p)
+∏
+k=l(p)−n+2
+pk
+
+
+
+ (21)
+By assuming that p′ = vi pα where vi ∈ V can vary, we can study if the variation of vi
+modifies the cost f (α|p′) :
+• l(p) ≥ n ⇒ ∆i∂ fn(α|vi pα) = 0, thus fn ∈ FL
+G(n)
+• l(p) = n − 1 ⇒ ∆i∂ fn(α|vi pα) = ∂ fn(α|pα)∆vi ̸= 0, thus fn ∈ FL
+G(n − 1)
+This result demonstrates that based on l(p), the cost function fn may either belong to
+the set FL
+G(n) or to the set FL
+G(n − 1). Consequently, fn is a member of the intersection of
+these two sets, implying that fn(p) ∈ FL
+G(n) ∩ FL
+G(n − 1).
+4. Line Graph Application for k-Additive Functions
+In 1932, Whitney [35] introduced a new construction for undirected graphs, called line
+graphs. This concept was further extended to directed graphs (line digraph) with the study
+proposed by Harary and Norman [36]. Line digraphs are particularly useful in applications
+where the relationships between the edges of a graph are as important as the relationships
+between the vertices themselves. Consequently, they can be used to account for constraints
+in a graph by converting problems stated in terms of edge connectivity into equivalent
+problems stated in terms of vertex connectivity, which are often easier to analyze and solve
+using existing graph algorithms.
+Mathematics 2024, 12, 2995 9 of 24
+4.1. Introduction to Line Graphs
+Basically, a line digraph H = (VH, EH) ∈ G d of a given digraph G = (VG, EG) ∈ G d is
+a graph that represents the adjacencies between the edges of G = (VG, EG). The line graph
+is constructed using a transformation denoted as H = Ld(G), and based on the following
+conditions:
+VH = {u|u = α ∈ EG}
+EH = {(α, β)|α, β ∈ VH|α2 = β1} (22)
+In Equation (22), the first condition means that each vertex of H = ( VH, EH) cor-
+responds to an edge of the original graph G = ( VG, EG), while the second condition
+implies that two vertices in H = ( VH, EH) are connected by an edge if and only if their
+corresponding edges in G = (VG, EG) share a common vertex.
+The transformation H = Ld(G) can be seen as a mapping application from the set of
+digraphs to itself, denoted as: Ld : Gd → G d. It is important to note that there is a similar
+mapping application L : G → G for undirected graphs; however, here, we only focus on
+directed graphs. Indeed, any undirected graph G can be converted into a directed graph
+G′ by transforming each undirected edge {u, v} ∈ EG into two directed edges (u, v) ∈ EG′
+and (v, u) ∈ EG′. Therefore, without loss of generality, the discussion in the remainder of
+this paper will focus exclusively on directed graphs. Consequently, the notation Ld(·) will
+be simplified to the more general notation L(·).
+Figure 2 illustrates a example of the process of generating a line digraph G1 = L(G0)
+from the original digraph G0. As shown in this figure, the first step of the transformation
+involves replacing each edge of the original digraph G0 with a vertex in G1. The new
+vertices in G1 are labeled to indicate the direction of the original edge in G0 they represent.
+For example, the edge from vertex 1 to 4 in G0 becomes a vertex in G1 labeled as “14” (i.e.,
+1 to 4). Subsequently, all vertices created in G1 are connected with directed edges based on
+a specific rule: if two edges in G0 share a common vertex, and one edge’s arrival vertex is
+the other edge’s departure vertex, then the corresponding vertices inG1 are connected by a
+directed edge. For example, since G0 has edges from 1 to 4 and from 4 to 2, then in G1, the
+vertex representing “14” will have a directed edge to the vertex representing “42”.
+1 2
+43
+1 2
+43
+31
+12
+34
+4214
+43
+31
+12
+34
+4214
+43
+G0: G1:
+Figure 2. Illustration of line graph transformation.
+In this paper, we will use several iterations of L(·). The sequence of graphs G built by
+the iteration of L(·) can be noted as:
+G0, G1 = L(G0), G2 = L(L(G0)) = L2(G0), . . . , Gm = Lm(G0) (23)
+This sequence was studied by van Rooij et al. [37], who demonstrated that if a graph
+contains a cycle, the sequence will never end with an empty graph. They also found that
+the size of graphs could increase without bounds. This aspect can cause problems if L(·)
+must be numerically iterated a significant number of times.
+Figure 3 illustrates a more general procedure for generating the transformation
+L(Gn−1) from the graph Gn.
+Mathematics 2024, 12, 2995 10 of 24
+u1,...,un v1,...,vn(uv) w1,...,wn(vw)
+(uv) = u1,...,un,vn
+= u1,v1,...,vn
+(vw) =  v1,...,vn,wn
+= v1,w1,...,wn
+uv vw
+(uvw)
+(uvw) =  u1,...,un,vn,wn
+=  u1,v1,...,vn,wn
+= u1,v1,w1,...,wn
+Gn-1:
+Gn:
+Figure 3. General transformation from Gn−1 = Ln−1(G) to Gn = Ln(G).
+4.2. Algebraic Formulation of the Adjacency Matrix of a Line Graph Sequence
+One of the fundamental tools in graph analysis is the adjacency matrix. This binary ma-
+trix captures all connections between the vertices of a graph, thereby defining its structure.
+However, graph transformations completely redefine these connections. Consequently, it
+becomes necessary to determine the equivalent adjacency matrix for a line graph G(n) that
+results from applying the transformation Ln(G) multiple times.
+For this purpose, we introduce the application E (·), which is a matrix transformation
+that squares the size of the matrix. This transformation is defined as follows:
+E : Mn → M n2
+A 7→ E (A) = ( A ⊗ A) ⊙ ∆n
+(24)
+where ⊙ represents the Hadamard product, or element-wise product, and∆n ∈ M n2 ({0, 1})
+is built such that:
+∆n =
+
+
+Dn
+1 . . . Dn
+n
+... ...
+Dn
+1 . . . Dn
+n
+
+, with [Dn
+k ]i,j = δi,k (25)
+and Dn
+k is filled with zeros, except on the kth row filled with ones.
+Theorem 1. Let A ∈ M n({0, 1}) be the adjacency binary matrix associated with the digraph
+G ∈ G d. The matrix composed of non-zeros rows and columns from E (A) is the adjacency matrix
+of L(G).
+Proof of Theorem 1. Let G, H ∈ G d, such that L(G) = H, and let AG be the adjacency ma-
+trix associated with G. In this proof, we will construct the adjacency matrix AH associated
+with H.
+Let us assume that we do not know if an edge exists; we will then consider all
+possibilities. Each node u in VG can potentially be connected to any other node v in VG,
+including itself (if we allow self-loops (u, u)). This results in |VG|2 possible connections. If
+we denote |VG| = n, therefore, the size of the matrix AH will be n2 × n2.
+Let us keep the order of the nodes used in the adjacency matrix AG as follows:
+u1, u2, · · · , un
+We choose the order of the nodes for AH as follows:
+Mathematics 2024, 12, 2995 11 of 24
+(u1, u1), (u1, u2), · · · , (u1, un), (u2, u1), · · · (u2, un), · · · , (un, un)
+Thus, we can say that:
+• There could be a one in the line k = in + v, corresponding to αk = (ui, uv) in AH only
+if [AG]i,v = 1; meaning that αk = (ui, uv) ∈ EG.
+• There could be a one in the kth line, with k = in + v, and the lth row, with l = jn + w,
+corresponding to the connection (αk, αl) only if v = j; meaning that (αk)2 = ( αl)1 (i.e.,
+the second node of αk is equal to the first node of αk).
+Using Properties 1–3, we can deduce that:
+[AH]k,l = [AG]i,v × [AG]j,w × δv,j (26)
+where k = in + v and l = jn + w.
+By definition of the Kronecker product (⊗) and using the definition of E (·) and ∆n in
+Equations (24) and (25), respectively, we can write:
+AH = ( AG ⊗ AG) ⊙ ∆n = E (AG) (27)
+This last result thus demonstrates that E (AG) is the adjacency matrix of AH.
+The result of Theorem 1 can be generalized to a line digraph Gm resulting from
+m-transformations, using the following theorem:
+Theorem 2. Let A ∈ M n({0, 1}) be the adjacency binary matrix associated with the digraph
+G ∈ G d. The matrix defined by:
+E m(A) =
+" 2m
+O
+i=1
+A
+#
+⊙ Km : K1 = ∆n ; Km+1 = (Km ⊗ Km) ⊙ ∆n2m+1 (28)
+is the adjacency matrix of Gm = Lm(G)
+Proof of Theorem 2. Let AGm ∈ M n. We can demonstrate the result shown in Theorem 2
+using a proof by induction. For this purpose, let us denote (∗) as the property we want to
+demonstrate.
+• For m = 1: the proof of Theorem 1 demonstrates that the property (∗) is true.
+• For m + 1: we assume that the property (∗) is true for a given m, meaning that:
+AGm =
+" 2m
+O
+i=1
+A
+#
+⊙ Km (29)
+is the adjacency matrix of Gm = Lm(G).
+Using the result of the proof of Theorem 1, we can say that AGm+1 = E (AGm ) is the
+adjacency matrix of L(Gm) = Gm+1, and we can write:
+E (AGm ) = ( AGm ⊗ AGm ) ⊙ ∆X (30)
+To determine the value of X, we need the size of AGm. If AG is a n × n matrix, then
+AG1 is a n2 × n2 matrix. By induction: AGm is a n2m
+× n2m
+so X = n2m+1
+, since:
+E (AGm ) = ( AGm ⊗ AGm ) ⊙ ∆n2m+1
+=
+ (" 2m
+O
+i=1
+A
+#
+⊙ Km
+)
+⊗
+(" 2m
+O
+i=1
+A
+#
+⊙ Km
+)!
+⊙ ∆n2m+1
+(31)
+Mathematics 2024, 12, 2995 12 of 24
+Using the direct product and Kronecker product rules, and arranging the terms of the
+equations, we obtain :
+E (AGm ) =
+"2×2m
+O
+i=1
+A
+#
+⊙ (Km ⊗ Km) ⊙ ∆n2m+1 (32)
+Based on the definition of Km+1, we can write:
+E (AGm ) =
+
+
+2m+1
+O
+i=1
+A
+
+ ⊙ Km+1 (33)
+This last result implies that
+hN2m+1
+i=1 A
+i
+⊙ Km+1 is the adjacency matrix of Lm+1(G).
+Thus, the property (∗) is true for m + 1.
+In conclusion, the property (∗) is true for all m ∈ N∗
+Finally, Theorem 3 can be used to quantify the upper bound of the complexity of the
+iterated line graphs in terms of the number of edges, considering that while the structure
+becomes increasingly interconnected, it is still finite and bounded as a function of the
+number of vertices n and the number of iterations m.
+Theorem 3. For any graph G, the number of edges of its associated mth line graph Lm(G) is
+bounded. This aspect implies: ∀G ∈ G , |VG| = n ⇒ | ELm(G)| ≤ nm+2
+Proof of Theorem 3. Let us define the application S(·) as the sum of all terms of a matrix,
+such as:
+S : M → R
+A 7→ S (A) =
+n
+∑
+i=1
+n
+∑
+j=1
+aij
+(34)
+The application S(·) can be used to count the number of edges in a graph given its
+adjacency matrix. Specifically, for a graph G ∈ G with its associated adjacency matrix AG,
+applying S(AG) yields the number of edges, represented as |EG|.
+Considering that A and Km are binary matrices, we can write :
+S(E m(A)) ≤ S (Km) (35)
+We need to know the value of S(Km) depending on m. Let Km ∈ M n and Km+1 =
+(Km ⊗ Km) ⊙ ∆n. Thus, [Km+1]n(i−1)+v,n(j−1)+w = [Km]iv × [Km]jw × δjv, and:
+S(Km+1) =
+n2
+∑
+k=1
+n2
+∑
+l=1
+[Km+1]kl (36)
+Let k = n(i − 1) + v and l = n(j − 1) + w with i, j, v, w ∈ J1, nK. We can therefore
+rewrite the previous equation as follows:
+Mathematics 2024, 12, 2995 13 of 24
+S(Km+1) =
+n
+∑
+i=1
+n
+∑
+j=1
+n
+∑
+v=1
+n
+∑
+w=1
+[Km]iv × [Km]jw × δjv
+=
+n
+∑
+i=1
+n
+∑
+j=1
+n
+∑
+w=1
+[Km]ij × [Km]jw
+=
+n
+∑
+i=1
+n
+∑
+w=1
+ 
+n
+∑
+j=1
+[Km]ij × [Km]jw
+!
+| {z }
+[K2m]iw
+=
+n
+∑
+i=1
+n
+∑
+w=1
+[K2
+m]iw = S(K2
+m)
+(37)
+which means that ∀m ∈ N∗, S(Km+1) = S(K2
+m).
+Moreover, if a graph has n nodes, it implies that K1 ∈ M n2. We find that S(K1) = n3.
+Additionally, ∀m ∈ N∗, the relationships S(K2
+m) = n · S (Km) holds.
+By integrating all this information, we deduce that S(Km) = nm−1 · S (K1) = nm+2.
+Finally, we can conclude that |ELm(G)| ≤ nm+2.
+As shown in Figure 4, the size of the iterated line graph could increase exponentially
+with the number of transformations m. For instance, by considering a digraph G with
+n = 10 nodes, the associated 6th line digraph, i.e., L6(G), will have a maximum of107 nodes.
+This aspect represents one of the main drawbacks of using multiple transformations, as it
+could become too time-consuming to generate the mth line digraph.
+0 1 2 3 4 5 6 7
+m
+101
+102
+103
+104
+105
+106
+107
+108
+109
+|ELm(G)|
+n = 2
+n = 4
+n = 6
+n = 8
+n = 10
+Figure 4. Evolution of the maximal size of the digraph.
+5. Application of Line Graph Sequences for Non-Additive Shortest Path Problems
+This section provides a comprehensive procedure for solving the shortest path problem
+using non-additive cost functions. Several algorithms are proposed to be used for (1)
+constructing the line digraph, (2) adding conditional weights to the generated line digraph
+to include constraints, and (3) adapting Dijkstra’s algorithm to the line digraph. In addition,
+a proof of the optimality of the proposed methodology is also provided.
+5.1. Problem Definition
+Let consider the following optimization problem associated with a digraph G =
+(VG, EG) ∈ G d:
+Mathematics 2024, 12, 2995 14 of 24
+min
+p∈PG
+f (p)| f ∈ FG(k)
+s.t.
+
+
+
+p1 = s
+pn = t, with n = l(p)
+∀i ∈ J1, nK | (pi, pi+1) ∈ EG
+(38)
+This problem is similar to the shortest path problem, except that the cost function is a
+k-additive cost function. The only constraints are that the first and the last vertices of the
+path are imposed: s for the source, and t for the target, and that the path can only follow
+the edges of the graph.
+5.2. Proposed Methodology—Conditional Weighting Shortest Path (CWSP)
+To solve the optimization problem presented in Equation (38), it is first necessary to
+construct a substitute graph, and then to use the properties of the k-additive cost functions
+established in Section 3 to add weights to this substitute graph. Extra weighted edges
+can be introduced to connect the original graph G with the substitute graph H. Finally,
+Dijkstra’s algorithm can be adapted and applied to the weighted substitute graph to solve
+the optimization problem in Equation (38). Algorithms 1–3 can be applied for that purpose.
+Algorithm 1: Construction of a line graph L(G)
+Input: Graph G = (VG, EG).
+Result: L(G).
+VL(G) ← { (α) : α ∈ EG}
+EL(G) ← ∅
+for α ∈ EG do
+for β ∈ EG do
+if α2 = β1 then
+EL(G) ← EL(G) ∪ {(α, β)}
+end
+end
+L(G) ← (VL(G), EL(G))
+end
+Algorithm 1 is proposed for constructing the line digraph L(G) associated with the
+digraph G. This transformation converts the original problem, which is stated in terms of
+edge connectivity, into a substitute (or equivalent) problem expressed in terms of vertex
+connectivity. Figures 5 and 6 illustrate an example of the application of Algorithm 1.
+Figure 5a shows the original digraph G, while Figure 5b shows the resulting line digraph
+L(G) = H. The line digraph in Figure 5b is then completed to include all entering nodes,
+as shown in Figure 6. These nodes represent the entry nodes into the original graph, i.e., all
+nodes that have only one connection with another node in the original digraph G.
+Once the line digraph L(G) is constructed, it serves as the substitute graph. The edges
+of this new graph must be weighted based on the static weights present in the original
+digraph G, as well as on various constraints typically captured by the k-non-additive
+cost function f (p). This process is performed with Algorithm 2. For instance, using the
+the sliding product window fswp (p) as defined in Equation (18), and considering the
+line digraph in Figure 6, we can determine the weight for the edge ((2, 6), (6, 8)) to be
+∂ f2(6, 8|2, 6, 8) = 96. Similarly, for an entering edge such as (3, (3, 4)), the weight would be
+fswp (3, 4) = 12.
+Mathematics 2024, 12, 2995 15 of 24
+Algorithm 2: Conditional weighting of a substitute graph
+Input: Graph: G = (VG, EG).
+Cost function : f .
+k order of additivity of f
+Result: H = (VH, EH, WH).
+H ← Lk(G) ▷ Using Algorithm 1
+for (p, q) ∈ EH do
+▷ l(p) = l(q) = k + 1
+(u1 . . .uk+1) ← p
+(v1 . . .vk+1) ← q
+β ← (uk+1, vk+1) ▷ β ∈ EG
+wα ← ∂ f (β|α)
+end
+VH ← VH
+S VG
+for p ∈ VH do
+p1 ← u
+γ ← (u, p) ▷ γ is an enter edge from G to H
+EH ← EH
+S{γ}
+wγ ← f (p . . . pk)
+end
+WH ← {wα : α ∈ EH}
+Algorithm 3: Dijkstra for a substitute graph
+Input: Graph H = (VH, EH), source node s, and target node t.
+Result: p∗
+for v ∈ VH do
+cost[v] ← ∞
+predecessor[v]← ∅
+end
+cost[s] ← 0
+Q ← VH
+while Q ̸= ∅ do
+u ← extract-min(Q)
+for α = (u, v) do
+if cost[v] > cost[u] + wα then
+cost[v] ← cost[u] + wα predecessor[v] ← u
+end
+if vk+1 = t then
+ulast = v
+break
+end
+end
+end
+p∗ = (t)
+u = ulast
+while l(u) = k + 1 do
+v = u
+u ← predecessor[v]
+p∗ ← (uk+1, p∗)
+end
+p∗ ← (v1 . . .vk, p∗)
+Mathematics 2024, 12, 2995 16 of 24
+1
+2
+3
+4 5
+6
+7
+8
+910
+(a)
+1
+2
+2
+1
+2
+5
+2
+6 6
+8
+8
+5
+5
+7
+8
+9
+1
+3
+3
+4
+1
+4
+4
+2
+7
+10
+10
+3
+9
+10
+10
+9 (b)
+Figure 5. Illustration of a digraph G and its transformation H = L(G). ( a) Original digraph G.
+(b) Resulting line digraph H = L(G).
+1
+2
+2
+1
+2
+5
+2
+6 6
+8
+8
+5
+5
+7
+8
+9
+1
+3
+3
+4
+1
+4
+4
+2
+7
+10
+10
+3
+9
+10
+10
+9
+2
+1
+3
+4
+6
+8
+5
+9
+7
+10
+Figure 6. Line graph with entering nodes.
+Finally, using the conditional weighted line digraph H = (VH, EH, WH) obtained with
+Algorithm 2, the shortest path from the source node s to the target node t in H can be
+determined using Dijkstra’s algorithm (see Algorithm 3). It is important to consider that
+a node v in H represents a series of node in G. This configuration implies that the target
+node t ∈ VG is reached when the last element of v ∈ VH is t, and the length of v is k + 1.
+The stop criterion in Dijkstra’s algorithm will be achieved whenvk+1 = t.
+The set of the three Algorithms 1–3 constitutes the conditional weighting shortest path
+(CWSP) method for solving a shortest path problem when the cost function isk-left-additive
+FL(k) or k-right-additive FR(k).
+5.3. Proof of Optimality and Algorithmic Cost
+The optimal path p∗ returned by Algorithm 3 represents the shortest path between the
+source node s and the target node t within the substitute graph H. This optimal path can be
+transferred to the original graph G, and the next Property 5 guarantees that the transferred
+path is indeed the optimal path that minimizes the cost function described in Equation (38).
+Property 5. The path returned by Algorithm 3 is a path that minimizes the cost function f (p),
+such that:
+p∗ ∈ argmin{ f (p)|p ∈ P , p1 = s, pn = t} (39)
+Mathematics 2024, 12, 2995 17 of 24
+Proof of Property 5. First of all, because f ∈ FG(k), we can break it into the sum of local
+differentials using Property 1:
+f (p) = ∑
+α ˜∈p
+∂ f (α|p) (40)
+Let us define q ∈ P H, such that:
+q1 = p∗
+1
+qi = p∗
+i . . . p∗
+k+i for i = 1 . . .n − k (41)
+and let us define TH = {v ∈ VH|vk+1 = t}.
+Dijkstra’s algorithm ensures that:
+q ∈ argmin
+(
+∑
+α ˜∈q
+wα | q1 = s, qn ∈ TH
+)
+and:
+∑
+α ˜∈q
+wα = f (p∗
+1 . . . p∗
+k ) + ∑
+α ˜∈q\q1
+∂ f (β|α) with β = ( αk+1αk+2) (42)
+Since l(α \ β) = k and f ∈ FG(k), we find that ∆r∂ f (β|rα) = 0. In addition, ∀α ˜∈ q, it
+follows that α ˜∈ p∗. Therefore, we can substitute ∂ f (β|α) = ∂ f (β|p∗).
+We can also change the sum of variables as follows:
+α ˜∈q \ q1 → β ˜∈p∗ \ (p∗
+1 . . . p∗
+k ) := p′ (43)
+which leads to:
+∑
+α ˜∈q
+wα = f (p∗
+1 . . . p∗
+k ) + ∑
+β∈p′
+f (β|p∗) = f (p∗) (44)
+In conclusion, p∗ is indeed the minimum solution of the k-additive cost function
+problem.
+In addition to assessing optimality, it might also be interesting to determine the
+algorithmic cost of the proposed CWSP method. This cost can be evaluated in terms of the
+maximum number of iterations required to solve the optimization problem. This parameter
+depends on two aspects: the size of the initial graph |VG|, and the order of the cost function
+k. Property 6 can be used to determine this cost.
+Property 6. Consider a graph G = (VG, EG) such as |VG| = n, and an associated cost function
+f ∈ FX(k), where X = {R or L}. Thus:
+1. The algorithmic cost of computing L k(G) is at highest order O
+
+m + nk+2
+
+.
+2. The algorithmic cost of the CWSP algorithm is, at highest order,O(nk+1(n + (k + 1) log(n))).
+Proof of Property 6.
+1. The algorithm cost of computing L(G) is O(|EG|):
+Theorem 1 establishes that at a given iteration i, the number of edges is bounded by
+|ELi(G)| ≤ ni+2. Summing all the costs, we obtain the following result:
+cost =
+m
+∑
+i=0
+|ELi(G)|
+cost = m + n3 + n4 + . . .+ nm+2
+cost ∝ m + nm+2
+(45)
+Mathematics 2024, 12, 2995 18 of 24
+2. The algorithmic cost of the CWSP with a Fibonacci heap [38]:
+Since |ELk(G)| ≤ nk+2, and using the definition of L(·), we can write :
+|VLk(G)| = |ELk−1(G)| (46)
+which implies:
+|VLk(G)| ≤ nk+1 (47)
+The computational cost of Dijkstra’s algorithm isO|E| + |V| log(|V|), and it is used
+in the last step with Algorithm 3. By substitution we can upper-bound the number of
+iterations, nit:
+nit = |ELk(G)| + |VLk(G)| · log(|VLk(G)|)
+≤ nk+2 + nk+1 log(nk+1)
+≤ nk+1(n + (k + 1) log(n))
+(48)
+Therefore, the computational cost is at most O(nk+1(n + (k + 1) log(n))).
+6. Application: Case Study in Airport Trajectory Optimization
+One of the main motivations for the development of the shortest path technique with
+conditional weighting is to address problems where constraints, which can be geometric or
+physical, can lead to the generation of paths that are infeasible in practice.
+A typical example is the management of aircraft ground trajectories at airports. Indeed,
+airports impose various types of restrictions and rules that pilots must comply with, such
+as directional taxiways and prohibited turns to avoid sharp maneuvers or to account for the
+size (or weight) of the aircraft. In addition, aircraft can accelerate or decelerate as they enter
+or exit turns. Consequently, their ground speeds are influenced by their current trajectory
+and the segment they will taxiing next. As illustrated in Figure 7a, these factors create areas
+within the airport where the ground speed of an aircraft cannot be predetermined. In the
+segments in the circled area in Figure 7a, the aircraft ground speed can vary according to
+three scenarios: the aircraft can (1) maintain its ground speed if it continues on the straight
+segment; (2) decelerate if it enters a turn; or (3) accelerate if it exits a turn. Additionally,
+certain trajectories are prohibited due to restrictions on maneuvers, such as sharp turns.
+For instance, as shown in Figure 7a, the aircraft is not authorized to perform a left turn to
+enter the turn segment, or a right turn to exit the turn segment.
+Due to these constraints, optimizing the ground trajectory of an aircraft within a graph that
+replicates the topology of an airport, as illustrated in Figure 7b, presents significant challenges.
+Undetermined speed zone
+(a)
+Legend:Ta x i w a y s
+Runways
+Map nodes
+Gate Positions
+Parking Positions
+−73.76−73.75−73.74−73.73−73.72
+45.455
+45.46
+45.465
+45.47
+45.475
+45.48
+45.485
+Longitude - [deg]
+Latitude - [deg] (b)
+Figure 7. Illustration of a graph for an airport and constraint during ground operations. (a) Example
+of restrictions along the path of an aircraft during taxi operation. (b) Example of a graph for Montreal
+Trudeau International Airport (CYUL).
+Mathematics 2024, 12, 2995 19 of 24
+6.1. Model
+In this section, we evaluate the effectiveness of the conditional weighting shortest path
+method proposed in this paper for solving the shortest path problem in an airport, taking
+into account constraints on sharp turns.
+The cost function for this application is based on the total distance traveled by the
+aircraft, while avoiding sharp turns. All sharp turns are determined a priori on the original
+graph using a classification method that considers four nodes (or three edges) to verify if
+the middle segment is allowed. Turn constraints are included in the cost function with a
+barrier function b(·), defined as:
+b : V4 → {1, +∞}
+b(vi−1, . . . ,vi+2) =
+(
+1 , if the turn is authorized
++ ∞ , if the turn is not authorized
+(49)
+By considering the function:
+d : V2 → R+ (50)
+which returns the distance between two points of the airport, the cost function can be
+expressed as follows:
+f (p) = d(v1, v2) +
+l(p)−2
+∑
+i=2
+d(vi, vi+i) · b(vi−1, . . . ,vi+2) + d(vn−1, vn) · c(vn−3, . . . ,vn) (51)
+Using the definitions and properties introduced in Section 3.3, we can confirm that
+f (p) belongs to FLR
+G (2) (see Equation (10)). Indeed, the left–right k-additivity nature of the
+cost function comes from the need to consider information about the edges preceding and
+succeeding a given edge to accurately classify sharp turns.
+6.2. Methodology and Results
+To compare and validate the CWSP method, the optimization problem described
+in Equation (38) was applied to Miami International Airport. In addition, 50 different
+scenarios were considered to find the shortest path between two randomly selected points
+on the airport graph, each separated by at least 20 nodes. For each scenario, the CWSP
+method using the non-additive cost function specified in Equation (51) was applied. At
+the same time, Dijkstra’s algorithm was also applied; however, since it cannot handle
+non-additive cost functions, the cost function for this algorithm was limited to the total
+distance traveled by the aircraft:
+f ∗(p) =
+l(p)−1
+∑
+i=1
+d(vi, vi+1) (52)
+which is additive by nature.
+It should be noted that the optimal solution found by Dijkstra’s algorithm was further
+evaluated using the cost function described in Equation (51). This evaluation determined
+whether the solution provided by Dijkstra’s algorithm was reliable (i.e., feasible) or not. If
+the value of the cost function was finite, this indicated that Dijkstra’s algorithm had found a
+viable solution. Conversely, if the value of the cost function was infinite, this suggested that
+the solution was not feasible in practice, as it included at least one prohibited sharp turn.
+Figure 8 shows examples of results comparisons for four different problems. In
+this figure, the trajectory found by Dijkstra’s algorithm is highlighted in green, while
+the trajectory found by the CWSP method is highlighted in blue. At a first glance, both
+strategies were able to find a trajectory between the source and destination nodes. However,
+when the trajectory found by Dijkstra’s algorithm was evaluated using the cost function in
+Equation (51), an infinite cost value was observed. This result can be attributed to the fact
+Mathematics 2024, 12, 2995 20 of 24
+that the solution provided by Dijkstra’s algorithm contains sharp turns that are forbidden.
+These turns are marked with red circles for each problem. In contrast, the CWSP method
+successfully found a better and feasible solution without any forbidden turns.
+CWSP Method
+Dijkstras Algorithm
+(a)
+CWSP Method
+Dijkstras Algorithm (b)
+CWSP Method
+Dijkstras Algorithm
+(c)
+CWSP Method
+Dijkstras Algorithm (d)
+Figure 8. Examples of results; comparison between a trajectory found by the CWSP method and
+a trajectory found using Dijkstra’s algorithm. ( a) Problem #4. ( b) Problem #40. ( c) Problem #47.
+(d) Problem #49.
+This analysis was repeated for all 50 problems. A table summarizing the results
+for each problem is included in the Appendix A. By analyzing the results, it was found
+that the CWSP method successfully solved all problems, consistently finding the shortest
+feasible trajectory while avoiding sharp turns. Dijkstra’s algorithm was also able to find a
+solution, but only 28% of these solutions were reliable (i.e., feasible without forbidden turns).
+Interestingly, as shown in the table in the Appendix A, whenever Dijkstra’s algorithm found
+an acceptable solution, it was identical to the solution found by the CWSP method. This
+analysis is significant because it shows that the CWSP method is not only capable of finding
+the shortest path in the sense of Dijkstra’s algorithm, it is also well-suited to handle complex
+graphs with constraints or to deal with non-additive cost functions.
+7. Conclusions
+In this paper, we presented a generalization of classical cost functions on graphs,
+traditionally called “additive” functions, which are part of the space of real edge functions.
+This generalization leads to the development of real path functions, a category known as
+non-additive or k-additive. While these functions are applicable to various shortest path
+problems, their complexity makes traditional shortest path algorithms designed to optimize
+real edge functions unsuitable.
+Mathematics 2024, 12, 2995 21 of 24
+To address a shortest path problem, our first step was to develop tools for characteriz-
+ing and analyzing path functions. By studying the variations of these functions, we were
+able to classify them into distinct sets.
+Then, for a subset of these non-additive function sets, we proposed a technique for
+solving the shortest path problem. This technique relies on the weighting of a substitute
+graph, which is determined by successive iterations of transforming a graph into its
+associated line graph. The proposed method has proven effective on a simple problem that
+could not have been solved using Dijkstra’s algorithm alone, demonstrating its potential for
+application to numerous physical and engineering problems requiring complex modeling.
+This article establishes an initial framework and provides an exact solution that represents
+a significant advance in the field of complex shortest path problems.
+However, the computational cost of such a method is difficult to bound because it
+strongly depends on the topology of the initial graph. Furthermore, the complexity of the
+cost function rapidly increases with the size of the replacement graph used to accurately
+solve the problem. Finally, this method, with its solid proof of convergence, can be used
+to validate the efficiency of faster heuristic methods for solving the shortest path problem
+with non-additive path functions.
+The research initiated in this paper can be extended in several directions. Firstly, the
+upper bound provided for the size of the linear graph sequence is highly dependent on the
+structure of the initial graph. A tighter limit could potentially be obtained by examining
+how the sequence of linear graphs evolves as a function of the topology of the initial
+graph. Furthermore, it has been observed that when k is large, the cost of constructing
+and weighting the line graph becomes significant. It would be useful to study and limit
+the error introduced when approximating a k-additive cost function by a (k − n)-additive
+cost function, where n < k. This approach could lead to faster solutions to the problem
+while quantifying the associated error. Finally, the general concept of non-additive cost
+functions encompasses different types of functions. The methodology proposed in this
+paper is suitable for functions in F(k). However, we believe that exact methods applicable
+to functions in F(∞) which are similar to quadratic forms such as f (p) = xTQx”, are also
+worth exploring.
+Author Contributions: Conceptualization, A.D.; funding acquisition, G.G. and R.M.B.; methodology,
+A.D. and T.W.; project administration, G.G.; supervision, G.G. and R.M.B.; validation, A.D. and T.W.;
+writing—original draft, A.D.; writing—review and editing, G.G. and R.M.B. All authors have read
+and agreed to the published version of the manuscript.
+Funding: This research was funded by the Natural Sciences and Engineering Research Council of
+Canada (NSERC: RGPIN-2022-03864), and by the Fonds de Recherche ÉTS sur les Changements
+Climatiques (FRECC).
+Data Availability Statement: Dataset available on request from the authors.
+Acknowledgments: This research was performed at the Laboratory of Applied Research in Active
+Controls, Avionics and AeroServoElasticity research (LARCASE). The authors would like to thank the
+Fond de Recherche ÉTS sur les Changements Climatiques (FRECC) for their support of this project.
+Conflicts of Interest: The authors declare no conflicts of interest.
+Abbreviations
+The following abbreviations are used in this manuscript:
+SPP Shortest Path Problem
+USPP Universal Shortest Path Problem
+QSPP Quadratic Shortest Path Problem
+CWSP Conditional Weighting Shortest Path
+LARCASE Laboratory of Applied Research in Active Control, Avionics and AeroServoElasticity
+Mathematics 2024, 12, 2995 22 of 24
+G Set of graphs
+P Set of paths in a graph
+H(P ) Space of real path functions
+G = (V, E) General graph
+f (·) General cost function
+∂ f (·|·) differential of f
+∆i=1,2Xi Variation on any quantity Xi
+p\α Path p deprived of edge α
+FX
+G(k) Set of k- additive cost function in direction X
+A Adjacency matrix
+∆n Binary matrix define in Equation (25)
+L(G) Line graph of G
+Appendix A. Results for All 50 Problems
+N◦Problem Dijkstra’s Algorithm Dijkstra’s Algorithm Conditional Weighting
+Solution Cost Solution Cost Method Considering
+Ignoring Constraints Considering Constraints Constraints
+1 1959.5 +∞ 2017.1
+2 3945.8 +∞ 3983.9
+3 768.1 768.1 768.1
+4 2327.3 +∞ 2655.8
+5 1128.2 1128.2 1128.2
+6 308.8 +∞ 836.8
+7 1014.6 1014.6 1014.6
+8 2061.4 +∞ 2094.6
+9 2297.5 +∞ 3940.0
+10 1434.3 1434.3 1434.3
+11 1720.5 +∞ 1889.7
+12 2567.8 +∞ 4500.3
+13 946.7 +∞ 1047.1
+14 593.0 +∞ 648.0
+15 607.2 +∞ 690.3
+16 1389.8 +∞ 1828.7
+17 2884.8 +∞ 2962.4
+18 2751.1 +∞ 2958.0
+19 2044.1 2044.1 2044.1
+20 2023.3 2023.3 2023.3
+21 1913.3 +∞ 2074.1
+22 2249.4 2249.4 2249.4
+23 3877.6 +∞ 4133.8
+24 1340.1 +∞ 1421.6
+25 3225.7 +∞ 3258.5
+Mathematics 2024, 12, 2995 23 of 24
+N◦Problem Dijkstra’s Algorithm Dijkstra’s Algorithm Conditional Weighting
+Solution Cost Solution Cost Method Considering
+Ignoring Constraints Considering Constraints Constraints
+26 2898.6 +∞ 2954.3
+27 426.0 +∞ 1317.5
+28 519.1 519.1 519.1
+29 2282.8 +∞ 2695.8
+30 2071.3 +∞ 2128.9
+31 1838.7 1838.7 1838.7
+32 2562.8 +∞ 2782.2
+33 1408.9 1408.9 1408.9
+34 365.6 +∞ 1266.3
+35 1948.7 +∞ 2055.0
+36 3694.3 +∞ 5595.6
+37 951.5 +∞ 2937.5
+38 1988.0 +∞ 1992.8
+39 1294.4 1294.4 1294.4
+40 2533.9 +∞ 2603.4
+41 2934.4 2934.4 2934.4
+42 2945.9 2945.9 2945.9
+43 2512.1 2512.1 2512.1
+44 1635.1 1635.1 1635.1
+45 477.9 477.9 477.9
+46 1506.4 1506.4 1506.4
+47 1762.6 +∞ 1775.0
+48 1380.4 +∞ 2324.4
+49 1729.8 +∞ 2080.2
+50 990.7 +∞ 1192.2
+Number of solution Not applicable 14 50
+References
+1. Wang, R.; Zhou, M.; Wang, J.; Gao, K. An Improved Discrete Jaya Algorithm for Shortest Path Problems in Transportation-Related
+Processes. Processes 2023, 11, 2447. [CrossRef]
+2. Wahhab, O.; Al-Araji, A.S. An Optimal Path Planning Algorithms for a Mobile Robot. Iraqi J. Comput. Commun. Control Syst. Eng.
+2021, 21, 44–58. [CrossRef]
+3. Rosyida, I.; Asih, T.S.N.; Waluya, S.; Sugiyanto. Fuzzy Shortest Path Approach for Determining Public Bus Route (Case study:
+Route planning for “Trans Bantul bus” in Yogyakarta, Indonesia). J. Discret. Math. Sci. Cryptogr. 2021, 24, 557–577. [CrossRef]
+4. Priliana, C.Y.; Rosyida, I. The Ambulance Route Efficiency for Transporting Patients to Referral Hospitals Based on Distance and
+Traffic Density Using the Floyd-Warshall Algorithm and Google Traffic Assistance. In Proceedings of the 4th International Seminar
+on Science and Technology (ISST 2022), Palu, Indonesia, 2–3 November 2022; Atlantis Press: Amsterdam, The Netherlands, 2023;
+pp. 349–360. [CrossRef]
+5. Murrieta Mendoza, A.; Beuze, B.; Ternisien, L.; Botez, R.M. Branch & Bound-Based Algorithm for Aircraft VNAV Profile Reference
+Trajectory Optimization. In Proceedings of the 15th AIAA Aviation Technology, Integration, and Operations Conference, Dallas,
+TX, USA, 22–26 June 2015; American Institute of Aeronautics and Astronautics: Reston, VA, USA. 2015. [CrossRef]
+6. Murrieta-Mendoza, A.; Hamy, A.; Botez, R.M. Four- and Three-Dimensional Aircraft Reference Trajectory Optimization Inspired
+by Ant Colony Optimization. J. Aerosp. Inf. Syst. 2017, 14, 597–616. [CrossRef]
+7. Murrieta-Mendoza, A.; Botez, R.M.; Bunel, A. Four-Dimensional Aircraft En Route Optimization Algorithm using the Artificial
+Bee Colony. J. Aerosp. Inf. Syst. 2018, 15, 307–334. [CrossRef]
+8. Murrieta-Mendoza, A.; Romain, C.; Botez, R.M. 3D Cruise Trajectory Optimization Inspired by a Shortest Path Algorithm.
+Aerospace 2020, 7, 99. [CrossRef]
+Mathematics 2024, 12, 2995 24 of 24
+9. Durand, A.; Toulet, M.; Ghazi, G.; Botez, R.M. An Innovative Approach to Aircraft Ground Trajectory Optimization using a
+Bi-Directional A* Algorithm. In Proceedings of the Canadian Aeronautics and Space Institute (CASI) AERO23 Conference,
+Ottawa, ON, Canada, 14–16 November 2023.
+10. Dijkstra, E.W. A note on two problems in connexion with graphs. Numer. Math. 1959, 1, 269–271. [CrossRef]
+11. Hart, P .E.; Nilsson, N.J.; Raphael, B. A Formal Basis for the Heuristic Determination of Minimum Cost Paths.IEEE Trans. Syst.
+Sci. Cybern. 1968, 4, 100–107. [CrossRef]
+12. Loui, R.P . Optimal paths in graphs with stochastic or multidimensional weights. Commun. ACM 1983, 26, 670–676. [CrossRef]
+13. Sivakumar, R.A.; Batta, R. The variance-constrained shortest path problem. Transp. Sci. 1994, 28, 309–316. [CrossRef]
+14. Sen, S.; Pillai, R.; Joshi, S.; Rathi, A.K. A Mean-Variance Model for Route Guidance in Advanced Traveler Information Systems.
+Transp. Sci. 2001, 35, 37–49. [CrossRef]
+15. Hu, H.; Sotirov, R. On solving the quadratic shortest path problem. INFORMS J. Comput. 2020, 32, 219–233. [CrossRef]
+16. Rostami, B.; Malucelli, F.; Frey, D.; Buchheim, C. On the Quadratic Shortest Path Problem. In Proceedings of the Experimental
+Algorithms, Paris, France, 29 June–1 July 2015; Springer: Berlin/Heidelberg, Germany, 2015; pp. 379–390. [CrossRef]
+17. Rostami, B.; Chassein, A.; Hopf, M.; Frey, D.; Buchheim, C.; Malucelli, F.; Goerigk, M. The Quadratic Shortest Path Problem:
+Complexity , Approximability , and Solution Methods.Eur. J. Oper. Res. 2018, 268, 473–485. [CrossRef]
+18. Hu, H.; Sotirov, R. A Polynomial Time Algorithm for the Linearization Pproblem of the QSPP and its Applications. arXiv 2018,
+arXiv:1802.02426.
+19. Weiss, E.; Kaminka, G.A. A Generalization of the Shortest Path Problem to Graphs with Multiple Edge-Cost Estimates. In
+Proceedings of the ECAI 2023, Kraków, Poland, 30 September–4 October 2023.
+20. Turner, L.; Hamacher, H.W. On Universal Shortest Paths. In Proceedings of the Operations Research Proceedings 2010: Selected
+Papers of the Annual International Conference of the German Operations Research Society, 1–3 September 2011; Springer:
+Berlin/Heidelberg, Germany, 2011; pp. 313–318. [CrossRef]
+21. Turner, L. Variants of the Shortest Path Problem. Algorithmic Oper. Res. 2011, 6, 91–104.
+22. Jiang, S.; Feng, Z.; Zhang, X.; Wang, X.; Rao, G. A Multi-dimension Weighted Graph-Based Path Planning with Avoiding Hotspots.
+In Proceedings of the Knowledge Graph and Semantic Computing: Semantic, Knowledge, and Linked Big Data, Singapore, 19–22
+September 2016; pp. 15–26. [CrossRef]
+23. Salzman, O.; Felner, A.; Hernández, C.; Zhang, H.; Chan, S.H.; Koenig, S. Heuristic-Search Approaches for the Multi-Objective
+Shortest-Path Problem: Progress and Research Opportunities. In Proceedings of the Proceedings of the Thirty-Second International
+Joint Conference on Artificial Intelligence, Macao, China, 19–25 August 2023; pp. 6759–6768. [CrossRef]
+24. Vidhya, K.; Saraswathi, A. A Novel Method for Finding the Shortest Path with Two Objectives Under Trapezoidal Intuitionistic
+Fuzzy Arc Costs. Int. J. Anal. Appl. 2023, 21, 121–121. [CrossRef]
+25. Dodziuk, J. Difference Equations, Isoperimetric Inequality and Transience of Certain Random Walks. Trans. Am. Math. Soc. 1984,
+284, 787–794. [CrossRef]
+26. Woess, W.Random Walks on Infinite Graphs and Groups; Cambridge Tracts in Mathematics, Cambridge University Press: Cambridge,
+UK, 2000. [CrossRef]
+27. McDonald, P .; Meyers, R. Diffusions on Graphs, Poisson Problems and Spectral Geometry. Trans. Am. Math. Soc. 2002,
+354, 5111–5136. [CrossRef]
+28. Friedman, J.; Tillich, J.P . Calculus on Graphs. arXiv 2004, arXiv:cs/0408028. [CrossRef]
+29. Friedman, J.; Tillich, J.P . Laplacian Eigenvalues and Distances Between Subsets of a Manifold.J. Differ. Geom. 2000, 56, 285–299.
+[CrossRef]
+30. Friedman, J.; Tillich, J.P . Wave Equations for Graphs and the Edge-Based Laplacian.Pac. J. Math. 2004, 216, 229–266. [CrossRef]
+31. Elmoataz, A.; Lezoray, O.; Bougleux, S. Nonlocal Discrete Regularization on Weighted Graphs: A Framework for Image and
+Manifold Processing. IEEE Trans. Image Process. 2008, 17, 1047–1060. [CrossRef] [PubMed]
+32. Gilboa, G.; Osher, S. Nonlocal Operators with Applications to Image Processing. Multiscale Model. Simul. 2009, 7, 1005–1028.
+[CrossRef]
+33. Desquesnes, X.; Elmoataz, A.; Lézoray, O. Eikonal Equation Adaptation on Weighted Graphs: Fast Geometric Diffusion Process
+for Local and Non-Local Image and Data Processing. J. Math. Imaging Vis. 2013, 46, 238–257. [CrossRef]
+34. Mahmood, F.; Shahid, N.; Skoglund, U.; Vandergheynst, P . Adaptive Graph-Based Total Variation for Tomographic Reconstruc-
+tions. IEEE Signal Process. Lett. 2018, 25, 700–704. [CrossRef]
+35. Whitney, H. Congruent Graphs and the Connectivity of Graphs. Am. J. Math. 1992, 54, 150–168. [CrossRef]
+36. Harary, F.; Norman, R.Z. Some Properties of Line Digraphs. Rend. Del Circ. Mat. Palermo 1960, 9, 161–168. [CrossRef]
+37. van Rooij, A.C.M.; Wilf, H.S. The Interchange Graph of a Finite Graph. Acta Math. Acad. Sci. Hung. 1965, 16, 263–269. [CrossRef]
+38. Fredman, M.L.; Tarjan, R.E. Fibonacci heaps and their uses in improved network optimization algorithms. J. ACM 1987,
+34, 596–615. [CrossRef]
+Disclaimer/Publisher’s Note: The statements, opinions and data contained in all publications are solely those of the individual
+author(s) and contributor(s) and not of MDPI and/or the editor(s). MDPI and/or the editor(s) disclaim responsibility for any injury to
+people or property resulting from any ideas, methods, instructions or products referred to in the content.

@@ -1,0 +1,21 @@
+\documentclass{sysuthesis}
+\usepackage{geometry}
+\usepackage[ruled,linesnumbered]{algorithm2e}
+\begin{document}
+\begin{algorithm}[H]
+\caption{线图的拓扑替代构造算法}\label{alg:line_graph}
+\KwIn{原图 $G = (V_G, E_G)$}
+\KwOut{线图 $L(G)$}
+$V_{L(G)} \leftarrow \{(\alpha) \mid \alpha \in E_G\}$\;
+$E_{L(G)} \leftarrow \emptyset$\;
+\ForEach{$\alpha \in E_G$}{
+    \ForEach{$\beta \in E_G$}{
+        \If{$\alpha_2 = \beta_1$}{
+            $E_{L(G)} \leftarrow E_{L(G)} \cup \{(\alpha, \beta)\}$\;
+        }
+    }
+}
+$L(G) \leftarrow (V_{L(G)}, E_{L(G)})$\;
+\Return $L(G)$\;
+\end{algorithm}
+\end{document}

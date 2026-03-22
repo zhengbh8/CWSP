@@ -1,0 +1,13 @@
+# 编译产物
+build/
+*.o
+*.out
+*.exe
+
+# Python 缓存
+__pycache__/
+*.pyc
+
+# 临时文件和编辑器配置
+.vscode/
+.DS_Store

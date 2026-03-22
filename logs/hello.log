@@ -1,0 +1,17 @@
+======================================
+Timestamp: Sun Mar 22 18:01:50 CST 2026
+======================================
+Compiling src/hello.cu...
+$ nvcc src/hello.cu -o build/hello
+Compilation successful. Running...
+--- Execution Output ---
+hello from GPU!
+======================================
+Timestamp: 2026-03-22T18:11:43+08:00
+PWD: /root/autodl-tmp/cwsp
+======================================
+Compiling src/hello.cu...
+$ nvcc src/hello.cu -O3 -o build/hello
+Compilation successful. Running...
+--- Execution Output ---
+hello from GPU!
