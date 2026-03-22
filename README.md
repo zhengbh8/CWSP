@@ -12,6 +12,24 @@ Project root is expected to be `/root/autodl-tmp/cwsp`.
 - `logs/`: Compilation and execution logs.
 - `build/`: Compiled binaries.
 
+## Repository Visibility / 仓库可见性
+
+> **当前状态：此仓库是 PUBLIC（公开）的，互联网上的任何人都可以查看。**
+>
+> **Current status: This repository is PUBLIC. Anyone on the internet can view it.**
+
+If you want to restrict access to only yourself:
+1. Go to the repository on GitHub: https://github.com/zhengbh8/CWSP
+2. Click **Settings** → scroll down to the **Danger Zone** section
+3. Click **Change visibility** → select **Make private**
+
+如果你希望仓库只有自己可见：
+1. 打开仓库页面：https://github.com/zhengbh8/CWSP
+2. 点击 **Settings** → 滚动到底部的 **Danger Zone** 区域
+3. 点击 **Change visibility** → 选择 **Make private**
+
+---
+
 ## Getting Started
 
 ### Minimal Run Workflow
