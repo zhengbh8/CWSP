@@ -50,6 +50,13 @@
     \label{fig:exp1_40cases}
 \end{figure}
 
+\begin{table}[htbp]
+    \centering
+    \caption{40组长跨度机场路网测试中的算法统计汇总}
+    \label{tab:exp1_40cases_summary}
+    \input{figures/exp1_40cases_summary.tex}
+\end{table}
+
 综合表~\ref{tab:baseline_compare} 的极端用例展示以及图~\ref{fig:exp1_40cases} 中的宏观评测数据，可以总结出证明本课题必然借用线图拓扑转换降维打击理论的三大核心定性依据：
 \begin{enumerate}
     \item \textbf{在长距复杂地带传统算法大概率瘫痪：} 如数据统计所示，在面对超过 20 跳的复杂路由时，由于单纯的贪心搜索不具备预判和规避多边非加性约束的能力，传统 Dijkstra 出现了大面积碰撞急转弯的不可行路径（即图中的红色 $\times$ 号）。40个复杂样本中，传统算法最终仅取得了 50\%（20组）偶尔未触发障碍的合法生存率，其余全部遭遇惩罚壁垒陷入死胡同。这证实了仅靠经典标量加权法在多约束实体网络中天然失效。

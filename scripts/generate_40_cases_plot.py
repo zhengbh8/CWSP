@@ -68,12 +68,27 @@ def main():
     # Calculate stats
     dijkstra_success = sum(1 for r in results if r['dij_real'] == r['dij_num'])
     cwsp_success = sum(1 for r in results if r['cwsp_cost'] < float('inf'))
+    dijkstra_fail = 40 - dijkstra_success
+    cwsp_fail = 40 - cwsp_success
+    dijkstra_valid_avg = sum(r['dij_num'] for r in results if r['dij_real'] == r['dij_num']) / dijkstra_success
+    cwsp_avg = sum(r['cwsp_cost'] for r in results) / cwsp_success
+
     print(f"Dijkstra success rate: {dijkstra_success}/40 ({(dijkstra_success/40)*100:.1f}%)")
     print(f"CWSP success rate: {cwsp_success}/40 ({(cwsp_success/40)*100:.1f}%)")
+    print(f"Average Dijkstra valid cost: {dijkstra_valid_avg:.2f}")
+    print(f"Average CWSP cost: {cwsp_avg:.2f}")
     
     # Set up matplotlib style (English labels to avoid TeX font issues, TeX will handle caption)
     sns.set_theme(style="whitegrid")
-    fig, axes = plt.subplots(2, 1, figsize=(10, 8), gridspec_kw={'height_ratios': [3, 1]})
+    fig, axes = plt.subplots(2, 1, figsize=(11.5, 8), gridspec_kw={'height_ratios': [3, 1]})
+
+    # Write a compact summary table for LaTeX reuse
+    summary_path = out_img.rsplit('.', 1)[0] + '_summary.tex'
+    with open(summary_path, 'w', encoding='utf-8') as f:
+        f.write('\\begin{tabular}{lcccc}\n')
+        f.write('\\toprule\n')
+        f.write('算法 & 有效样本数 & 失败样本数 & 成功率 & 平均代价 ' + '\\\\' + '\n')
+        f.write('\\midrule\n')
     
     ax = axes[0]
     cases = [r['id'] for r in results]
@@ -108,7 +123,7 @@ def main():
     ax.set_title("Path Cost Comparison: CWSP vs Traditional Dijkstra", fontsize=14, pad=15)
     ax.set_xticks(range(1, 41, 2))
     ax.set_ylim(0, max_cost * 1.25)
-    ax.legend(loc='upper right', fontsize=11)
+    ax.legend(loc='upper left', bbox_to_anchor=(1.02, 1.0), borderaxespad=0.0, fontsize=10)
     
     # Axis 2: Success rate bar chart
     ax2 = axes[1]
@@ -124,9 +139,17 @@ def main():
         ax2.text(bar.get_width() + 2, bar.get_y() + bar.get_height()/2 - 0.05, 
                  f"{bar.get_width():.1f}%", fontsize=12, fontweight='bold')
 
-    plt.tight_layout()
+    plt.tight_layout(rect=[0, 0, 0.86, 1])
     plt.savefig(out_img, format='pdf', bbox_inches='tight')
+
+    with open(summary_path, 'a', encoding='utf-8') as f:
+        f.write(f'Traditional Dijkstra & {dijkstra_success} & {dijkstra_fail} & {(dijkstra_success/40)*100:.1f}\\% & {dijkstra_valid_avg:.2f} ' + '\\\\' + '\n')
+        f.write(f'Line Graph CWSP & {cwsp_success} & {cwsp_fail} & {(cwsp_success/40)*100:.1f}\\% & {cwsp_avg:.2f} ' + '\\\\' + '\n')
+        f.write('\\bottomrule\n')
+        f.write('\\end{tabular}\n')
+
     print(f"Chart saved successfully at {out_img}!")
+    print(f"Summary table saved successfully at {summary_path}!")
 
 if __name__ == "__main__":
     main()
