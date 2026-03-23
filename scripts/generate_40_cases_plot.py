@@ -151,5 +151,32 @@ def main():
     print(f"Chart saved successfully at {out_img}!")
     print(f"Summary table saved successfully at {summary_path}!")
 
+    # Write a full 40-case table
+    full_table_path = out_img.rsplit('.', 1)[0] + '_full_table.tex'
+    with open(full_table_path, 'w', encoding='utf-8') as f:
+        f.write("\\begin{longtable}{cccc}\n")
+        f.write("\\caption{40组独立路网寻路代价完整对比记录表} \\label{tab:exp1_40cases_full} \\\\\n")
+        f.write("\\toprule\n")
+        f.write("\\textbf{N$^\\circ$Problem} & \\textbf{\\shortstack{Dijkstra's Algorithm\\\\Solution Cost\\\\Ignoring Constraints}} & \\textbf{\\shortstack{Dijkstra's Algorithm\\\\Solution Cost\\\\Considering Constraints}} & \\textbf{\\shortstack{Conditional Weighting\\\\Method Considering\\\\Constraints}} \\\\\n")
+        f.write("\\midrule\n")
+        f.write("\\endfirsthead\n")
+        f.write("\\caption[]{40组独立路网寻路代价完整对比记录表（续）} \\\\\n")
+        f.write("\\toprule\n")
+        f.write("\\textbf{N$^\\circ$Problem} & \\textbf{\\shortstack{Dijkstra's Algorithm\\\\Solution Cost\\\\Ignoring Constraints}} & \\textbf{\\shortstack{Dijkstra's Algorithm\\\\Solution Cost\\\\Considering Constraints}} & \\textbf{\\shortstack{Conditional Weighting\\\\Method Considering\\\\Constraints}} \\\\\n")
+        f.write("\\midrule\n")
+        f.write("\\endhead\n")
+        
+        for r in results:
+            pid = r['id']
+            dij_ignore = f"{r['dij_num']:.1f}"
+            dij_cons = "$+\\infty$" if (r['dij_real'] > r['dij_num'] and r['dij_real'] > 1000) else f"{r['dij_num']:.1f}"
+            cwsp = f"{r['cwsp_cost']:.1f}"
+            f.write(f"{pid} & {dij_ignore} & {dij_cons} & {cwsp} \\\\\n")
+            f.write("\\hline\n")
+            
+        f.write("\\end{longtable}\n")
+        
+    print(f"Full table saved successfully at {full_table_path}!")
+
 if __name__ == "__main__":
     main()
