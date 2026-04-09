@@ -2,46 +2,53 @@
   \centering
   \begin{tikzpicture}[
     >=Latex,
-    main node/.style={circle,draw,minimum size=6.5mm,inner sep=0pt},
-    edge label/.style={draw=none,fill=white,inner sep=1pt,font=\footnotesize},
-    every edge/.style={draw,->,line width=0.6pt}
+    vtx/.style={circle,draw,minimum size=6.2mm,inner sep=0pt},
+    evtx/.style={circle,draw,minimum size=6.0mm,inner sep=0pt},
+    lg edge/.style={draw,->,line width=0.6pt},
+    every edge/.style={lg edge}
   ]
-    % Original Graph G
+    % ---------------- Left: original graph G^0 ----------------
     \begin{scope}[xshift=0cm, yshift=0cm]
-      \node[main node] (U)  at (0, 0) {u};
-      \node[main node] (X)  at (0, -2.0) {x};
-      \node[main node] (V)  at (2.5, -1.0) {v};
-      \node[main node] (W1) at (5.0, 0.5) {w$_1$};
-      \node[main node] (W2) at (5.0, -2.5) {w$_2$};
-      
-      \path (U) edge node[edge label, above=2pt, sloped] {$e_1$} (V)
-            (X) edge node[edge label, below=2pt, sloped] {$e_4$} (V)
-            (V) edge node[edge label, above=2pt, sloped] {$e_2$} (W1)
-            (V) edge node[edge label, below=2pt, sloped] {$e_3$} (W2);
-            
-      \node[draw=none] at (2.5, -3.5) {\textbf{原图:} $G$};
+      \node[vtx] (a1) at (0.0, 1.0) {1};
+      \node[vtx] (a2) at (2.3, 1.0) {2};
+      \node[vtx] (a3) at (0.0, -1.0) {3};
+      \node[vtx] (a4) at (2.3, -1.0) {4};
+
+      % edges of G^0
+      \path (a3) edge (a1)
+            (a1) edge (a2)
+            (a2) edge (a4)
+            (a3) edge (a4)
+            (a4) edge[bend left=15] (a1)
+            (a4) edge (a2);
+
+      \node[draw=none] at (1.15, -2.05) {\textbf{$G^0$（原图）}};
     \end{scope}
-    
-    % Arrow indicating transformation aligned vertically with the center (-1.0)
-    \node[draw=none] (arrow) at (6.6, -1.0) {\huge $\Rightarrow$};
-    
-    % Line Graph L(G)
-    \begin{scope}[xshift=8.5cm, yshift=0cm]
-      \node[main node] (E1) at (0, 0) {$e_1$};
-      \node[main node] (E4) at (0, -2.0) {$e_4$};
-      \node[main node] (E2) at (3.0, 0.5) {$e_2$};
-      \node[main node] (E3) at (3.0, -2.5) {$e_3$};
-      
-      % Shift positions of diagonal labels so they don't visually intersect
-      \path (E1) edge node[edge label, above=1pt, sloped] {$(e_1, e_2)$} (E2)
-            (E1) edge node[edge label, pos=0.74, above=1pt, sloped] {$(e_1, e_3)$} (E3)
-            (E4) edge node[edge label, pos=0.26, above=1pt, sloped] {$(e_4, e_2)$} (E2)
-            (E4) edge node[edge label, below=1pt, sloped] {$(e_4, e_3)$} (E3);
-      
-      \node[draw=none] at (1.5, -3.5) {\textbf{线图:} $L(G)$};
+
+    \node[draw=none] at (3.25, 0.0) {\Large $\Rightarrow$};
+
+    % ---------------- Right: line graph G^1 ----------------
+    \begin{scope}[xshift=5.7cm, yshift=0cm]
+      \node[evtx] (r12) at (0.0, 1.1) {12};
+      \node[evtx] (r24) at (1.9, 0.0) {24};
+      \node[evtx] (r41) at (0.0, -1.1) {41};
+      \node[evtx] (r42) at (3.4, 1.1) {42};
+      \node[evtx] (r31) at (-1.6, 0.0) {31};
+      \node[evtx] (r34) at (1.9, -1.9) {34};
+
+      \path (r31) edge (r12);
+      \path (r12) edge (r24);
+      \path (r24) edge[bend left=12] (r41);
+      \path (r24) edge (r42);
+      \path (r34) edge (r41);
+      \path (r34) edge (r42);
+      \path (r41) edge[bend left=12] (r12);
+      \path (r42) edge[bend left=12] (r24);
+
+      \node[draw=none] at (0.9, -2.55) {\textbf{$G^1=L(G^0)$（线图）}};
     \end{scope}
 
   \end{tikzpicture}
-  \caption{有向图网络拓扑映射至线图的转换展开结构}
+  \caption{线图变换示意}
   \label{fig:line_graph_example}
 \end{figure}
