@@ -1,0 +1,39 @@
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+    block/.style={rectangle, draw, fill=blue!10, text centered, rounded corners, minimum height=3em, minimum width=4em},
+    thread/.style={circle, draw, fill=orange!20, minimum size=1.5em, inner sep=1pt},
+    gridbox/.style={rectangle, draw, dashed, fill=gray!5, thick, inner sep=10pt}
+  ]
+    % Grid
+    \node[gridbox, minimum width=12cm, minimum height=6cm] (grid) {};
+    \node[anchor=north west, font=\bfseries] at (grid.north west) {Grid (网格)};
+    
+    % Blocks
+    \node[block, minimum width=3.5cm, minimum height=4cm, xshift=-3cm, yshift=-0.5cm] (block0) at (grid.center) {};
+    \node[anchor=north, font=\bfseries] at (block0.north) {Block (线程块) 0};
+    \node[block, minimum width=3.5cm, minimum height=4cm, xshift=3cm, yshift=-0.5cm] (block1) at (grid.center) {};
+    \node[anchor=north, font=\bfseries] at (block1.north) {Block (线程块) 1};
+    
+    % Threads in Block 0
+    \node[thread] (t00) at ([xshift=-0.8cm, yshift=0.5cm]block0.center) {\tiny T0};
+    \node[thread] (t01) at ([xshift=0.8cm, yshift=0.5cm]block0.center) {\tiny T1};
+    \node[thread] (t02) at ([xshift=-0.8cm, yshift=-0.8cm]block0.center) {\tiny T2};
+    \node[thread] (t03) at ([xshift=0.8cm, yshift=-0.8cm]block0.center) {\tiny T3};
+    \node[font=\footnotesize] at ([yshift=-1.8cm]block0.center) {共享内存};
+    
+    % Threads in Block 1
+    \node[thread] (t10) at ([xshift=-0.8cm, yshift=0.5cm]block1.center) {\tiny T0};
+    \node[thread] (t11) at ([xshift=0.8cm, yshift=0.5cm]block1.center) {\tiny T1};
+    \node[thread] (t12) at ([xshift=-0.8cm, yshift=-0.8cm]block1.center) {\tiny T2};
+    \node[thread] (t13) at ([xshift=0.8cm, yshift=-0.8cm]block1.center) {\tiny T3};
+    \node[font=\footnotesize] at ([yshift=-1.8cm]block1.center) {共享内存};
+    
+    % Global Memory
+    \node[rectangle, draw, fill=green!10, minimum width=12cm, minimum height=1.5cm, rounded corners] (global) at ([yshift=-4.5cm]grid.center) {\textbf{全局内存 (Global Memory)}};
+    
+    \draw[<->, thick] (grid.south) -- (global.north) node[midway, right] {显存访问};
+  \end{tikzpicture}
+  \caption{CUDA 线程组织与多级内存架构示意图}
+  \label{fig:cuda_architecture}
+\end{figure}

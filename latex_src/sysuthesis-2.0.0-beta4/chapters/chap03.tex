@@ -27,6 +27,8 @@
 
 基于前节理论中代价函数的微分分解与拓展思维，现有研究已经建立了一套完整的条件权重最短路径（CWSP）算法框架\cite{durand2024generalized}，用于求解包含复杂前驱约束的最优路径问题。本节将对该框架进行深入剖析，其核心思路分为拓扑转换、条件加权映射与替代图寻路三个层序步骤。
 
+\input{figures/fig_cwsp_pipeline.tex}
+
 \subsection{第一阶段：线图的拓扑替代构造}
 算法的第一步旨在将原图 $G=(V_G, E_G)$ 在连边上的隐式约束，物理显式化为图节点的邻接问题。该过程定义了原图到其替代图（Alternative Graph，本质即为线图 $H = L(G)$）的映射逻辑：
 \begin{enumerate}
@@ -161,6 +163,8 @@ $p^* \leftarrow ((v_H)_1, \dots, (v_H)_k, p^*)$\;
 \section{算法的并行优化}
 
 针对 CWSP 算法在线图转换及寻路过程中面临的空间规模扩张与计算瓶颈，本节基于 GPU 的 CUDA 并行架构，对算法的三个核心阶段提出针对性的并行化改进方案。主要改进策略包括线图拓扑结构的并行构建、条件权重的并行计算，以及采用适配 GPU 架构的并行最短路径算法替代传统的 Dijkstra 算法。
+
+\input{figures/fig_parallel_optimization.tex}
 
 \subsection{线图拓扑结构的并行构建}
 

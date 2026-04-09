@@ -1,0 +1,40 @@
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}
+        \begin{axis}[
+            width=0.85\textwidth,
+            height=7.5cm,
+            ymode=log,
+            log basis y={10},
+            xlabel={原图边规模级 ($|E_G|$)},
+            ylabel={模型端到端求解总时长 (ms) -- 对数坐标},
+            grid=both,
+            minor grid style={dashed},
+            legend style={at={(0.05,0.95)}, anchor=north west},
+            symbolic x coords={5K, 10K, 20K, 50K, 100K},
+            xtick=data
+        ]
+        
+        \addplot[mark=*, thick, blue!80!black] coordinates {
+            (5K, 24.5)
+            (10K, 95.8)
+            (20K, 381.2)
+            (50K, 2490)
+            (100K, 10564)
+        };
+        \addlegendentry{纯 CPU 串行体系}
+
+        \addplot[mark=diamond*, thick, red!80!black] coordinates {
+            (5K, 2.8)
+            (10K, 4.3)
+            (20K, 8.1)
+            (50K, 20.4)
+            (100K, 48.6)
+        };
+        \addlegendentry{多极 GPU 协同并发}
+        
+        \end{axis}
+    \end{tikzpicture}
+    \caption{海量节点测试集下传统端到端模式与改进后整体加速表现}
+    \label{fig:exp_overall_scaling}
+\end{figure}

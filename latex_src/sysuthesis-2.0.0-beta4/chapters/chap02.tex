@@ -202,6 +202,16 @@ Dijkstra算法由荷兰计算机科学家E.W. Dijkstra于1956年提出，是解�
   \item 与非加性问题的联系：Dijkstra算法依赖于边权的加性性质，无法直接应用于非加性问题，需要对问题进行转化或设计新的算法。
 \end{itemize}
 
+\subsubsection{\texorpdfstring{$\Delta$}{Delta}-Stepping 算法}
+
+为了解决 Dijkstra 算法中严格的优先队列带来的难以并行化问题，Meyer 等人于 2003 年提出了 $\Delta$-Stepping 算法。该算法通过引入“桶（Bucket）”数据结构，在 Dijkstra 算法与 Bellman-Ford 算法之间取得了良好的平衡，从而实现了对图数据结构的有效并行处理。
+
+\textbf{算法思想}：$\Delta$-Stepping 算法的核心在于将优先队列离散化为一系列连续的桶数组 $B$。设定一个步长参量 $\Delta > 0$，每个桶 $B_i$ 用于存放当前暂定距离 $d(v)$ 落在区间 $[i\Delta, (i+1)\Delta)$ 范围内的顶点。在每一轮迭代中，算法并发地从当前非空的编号最小的桶中取出所有顶点，并使用它们的临接“轻边”（权重 $\le \Delta$ 的边）去更新其后继顶点的距离。如果更新后的顶点距离落入了更小的桶区间，则将其移入对应的桶中。当当前桶内的顶点经过轻边完全松弛稳定后，再利用与之相连的“重边”（权重 $> \Delta$ 的边）进行一轮跨桶范围的并行扩展松弛。
+
+\textbf{时间复杂度}：对于带最大度数限制的随机图拓扑结构，利用并行模型实现的 $\Delta$-Stepping 其平均时间复杂度可趋近于 $O(|V| + |E| + \frac{L}{\Delta})$，其中 $L$ 为最长最短路径距离。
+
+\textbf{在非加性并行寻路中的应用机理}：在应对如线图高阶网格这种极度稠密网络且由于需要处理千万级节点状态的背景下，$\Delta$-Stepping 算法有效地避免了并行线程对于单一队列的锁争用（Lock Contention）。通过控制共享变量的并发原子访问（如使用 \texttt{atomicMin}），本算法可以在现代 GPU 计算管线上直接映射为无强制排序的桶内波前探索操作，这也是其在海量数据非加性路由重构系统内进行寻优加速的直接理论基础。
+
 \section{非加性最短路径问题}
 
 非加性最短路径问题放宽了加性假设，使边权可能随上下文、时间或约束变化，导致经典算法失效。本节说明定义、失效原因、现实普适性，并据此给出分类与求解思路。
@@ -431,45 +441,9 @@ Dijkstra算法由荷兰计算机科学家E.W. Dijkstra于1956年提出，是解�
   \item 拓扑闭合：穷举原图的所有邻接边对，重复上述操作，直至构建出完整的线图邻接矩阵。
 \end{enumerate}
 
-通过上述变换机制，原图中步长为2的局部路径结构（如 $u \rightarrow v \rightarrow w$）被无损压缩为线图中的单条有向边。从空间映射的视角来看，线图本质上是对原图局部路径演化空间的一种高阶展开\cite{van1965interchange}。
+通过上述变换机制，原图中具有多重分支连结的局部交叉结构（如原图 $G$ 中由前置节点 $u, x$ 经由中继通融节点 $v$ 发散至后续节点 $w_1, w_2$ 的多重路径汇聚分发形态）被无损解耦展开为线图 $L(G)$ 中独立定点之间的有向连递序列（如 $e_1$ 与 $e_4$ 分别指向 $e_2$ 与 $e_3$，在无记忆的新图结构中共构出四组并行前向转换分支）。从空间映射的视角来看，线图本质上是对原图局部路径演化空间的一种高阶展开\cite{van1965interchange}。
 
-\begin{figure}[H]
-  \centering
-  \begin{tikzpicture}[
-    >=Latex,
-    node distance=22mm,
-    every node/.style={circle,draw,minimum size=6mm,inner sep=0pt},
-    every edge/.style={draw,->,line width=0.4pt}
-  ]
-    % Original Graph G
-    \begin{scope}[xshift=0cm]
-      \node (A) {u};
-      \node (B) [right=of A] {v};
-      \node (C) [right=of B] {w};
-      
-      \path (A) edge node[above,draw=none] {$e_1$} (B)
-            (B) edge node[above,draw=none] {$e_2$} (C);
-      
-      \node[draw=none,below=1.5cm of B] {\textbf{原图:} $G$};
-    \end{scope}
-    
-    % Arrow indicating transformation
-    \node[draw=none] (arrow) at (5.5, 0) {\Large $\Rightarrow$};
-    
-    % Line Graph L(G)
-    \begin{scope}[xshift=7cm]
-      \node (E1) {$e_1$};
-      \node (E2) [right=of E1] {$e_2$};
-      
-      \path (E1) edge node[above,draw=none] {$(e_1,e_2)$} (E2);
-      
-      \node[draw=none,below=1.5cm of E1,xshift=10mm] {\textbf{线图:} $L(G)$};
-    \end{scope}
-
-  \end{tikzpicture}
-  \caption{有向图及其线图的构造转化示例}
-  \label{fig:line_graph_example}
-\end{figure}
+\input{figures/fig_line_graph_example.tex}
 
 \subsection{线图的拓扑性质}
 

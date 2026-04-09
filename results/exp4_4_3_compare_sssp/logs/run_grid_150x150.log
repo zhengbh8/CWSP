@@ -1,0 +1,2 @@
+[INFO] dataset=grid_150x150 grid_n=150 V=89400 EH=355808 delta=35 turn_penalty=10 repeat=3
+[OK] CPU=14.971 ms, GPU=7.56236 ms, speedup=1.97967x, buckets~23

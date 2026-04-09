@@ -1,0 +1,1 @@
+[OK] grid_100x100 eh=157208 cpu_ms=1.08887 gpu_naive_ms=0.0079872 gpu_simt_ms=0.00736 speedup=147.944x

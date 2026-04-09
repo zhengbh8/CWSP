@@ -1,0 +1,20 @@
+\begin{table}[H]
+    \centering
+    \caption{伴随边条件权重计算：SIMT 线程束架构级优化前后性能对比}
+    \label{tab:exp_phase2_weight}
+    \renewcommand{\arraystretch}{1.3}
+    \resizebox{\textwidth}{!}{
+    \begin{tabular}{ccccc}
+        \toprule
+        \textbf{线图状态伴随边数 ($|E_H|$)} & \textbf{CPU 顺序解析 (ms)} & \textbf{GPU 朴素计算 (ms)} & \textbf{GPU SIMT 谓词对齐 (ms)} & \textbf{绝对加速比} \\
+        \midrule
+        100,168 & 0.70 & 0.007 & 0.006 & 109.8$\times$ \\
+        157,208 & 1.68 & 0.009 & 0.009 & 186.8$\times$ \\
+        634,408 & 4.36 & 0.019 & 0.018 & 244.7$\times$ \\
+        1,431,608 & 9.71 & 0.034 & 0.032 & 300.2$\times$ \\
+        2,548,808 & 18.57 & 0.056 & 0.053 & 352.8$\times$ \\
+        5,001,928 & 32.49 & 0.103 & 0.095 & 341.9$\times$ \\
+        \bottomrule
+    \end{tabular}
+    }
+\end{table}

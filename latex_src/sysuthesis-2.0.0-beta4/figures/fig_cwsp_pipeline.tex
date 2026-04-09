@@ -1,0 +1,32 @@
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[
+        node distance=1.5cm and 2cm,
+        box/.style={rectangle, draw, rounded corners, minimum width=3.5cm, minimum height=1.5cm, align=center, thick, fill=blue!10},
+        arrow/.style={-stealth, thick},
+        label/.style={font=\small, text width=3cm, align=center}
+    ]
+        
+        % Nodes
+        \node[box, fill=gray!10] (input) {原图网络 \\ $G=(V_G,E_G)$ \\ (带前驱物理约束)};
+        \node[box, below=of input] (phase1) {第一阶段: 拓扑转换 \\ 节点化连边 \\ $V_H \leftarrow E_G, \, E_H \leftarrow (\alpha,\beta)$};
+        \node[box, below=of phase1] (phase2) {第二阶段: 静态加权 \\ 差分增量映射 \\ $W_H \leftarrow \partial f(\beta|\alpha)$};
+        \node[box, below=of phase2] (phase3) {第三阶段: 路径寻优 \\ 标准Dijkstra求解 \\ $p^* \leftarrow \min W_H(q)$};
+        \node[box, fill=green!10, below=of phase3] (output) {全局最优解 \\ $p^* \in P_G(s,t)$};
+        
+        % Arrows
+        \draw[arrow] (input) -- (phase1);
+        \draw[arrow] (phase1) -- (phase2) node[midway, right, label] {无权高阶线图 \\ $L^{[k]}(G)$};
+        \draw[arrow] (phase2) -- (phase3) node[midway, right, label] {带权0-加性替代图 \\ $H(V_H,E_H,W_H)$};
+        \draw[arrow] (phase3) -- (output);
+        
+        % Decorative box framing the algorithm phases
+        \draw[dashed, thick, gray] 
+            ([xshift=-3cm, yshift=0.5cm]phase1.north west) rectangle 
+            ([xshift=3.5cm, yshift=-0.5cm]phase3.south east);
+        \node[anchor=south west, text=gray, font=\bfseries] at ([xshift=-3cm, yshift=0.5cm]phase1.north west) {CWSP算法核心步骤};
+            
+    \end{tikzpicture}
+    \caption{非加性约束下的线图转换与最短路径求解（CWSP框架）流程}
+    \label{fig:cwsp_pipeline}
+\end{figure}

@@ -1,0 +1,52 @@
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+    >=Latex,
+    font=\small,
+    box/.style={draw,minimum height=6mm,minimum width=7mm,inner sep=1.5pt},
+    label/.style={anchor=east},
+    arr/.style={->,line width=0.45pt}
+  ]
+    % Left: adjacency matrix C
+    \matrix (C) [matrix of math nodes, left delimiter={(}, right delimiter={)},
+      nodes={inner sep=1.2pt}, row sep=2.5pt, column sep=4.5pt] {
+      0 & 1 & 0 & 3 \\
+      2 & 0 & 3 & 0 \\
+      0 & 1 & 0 & 0 \\
+      3 & 0 & 5 & 0 \\
+    };
+    \node[left=3mm of C.west] {$C=$};
+
+    % Anchor for CSR block (shift right to avoid overlaps)
+    \coordinate (csr) at ([xshift=50mm]C.east);
+    \draw[arr] ([xshift=4mm]C.east) -- ([xshift=26mm]C.east);
+
+    % Right: CSR arrays
+    \node[label] (rpl) at ([yshift=9mm]csr) {\texttt{row\_ptr}:};
+    \node[box] (rp0) at ([xshift=14mm,yshift=9mm]csr) {0};
+    \node[box] (rp1) [right=0pt of rp0] {2};
+    \node[box] (rp2) [right=0pt of rp1] {4};
+    \node[box] (rp3) [right=0pt of rp2] {5};
+    \node[box] (rp4) [right=0pt of rp3] {7};
+
+    \node[label] (cil) at ([yshift=1mm]csr) {Col\_indices:};
+    \node[box] (ci0) at ([xshift=14mm,yshift=1mm]csr) {1};
+    \node[box] (ci1) [right=0pt of ci0] {3};
+    \node[box] (ci2) [right=0pt of ci1] {0};
+    \node[box] (ci3) [right=0pt of ci2] {2};
+    \node[box] (ci4) [right=0pt of ci3] {1};
+    \node[box] (ci5) [right=0pt of ci4] {0};
+    \node[box] (ci6) [right=0pt of ci5] {2};
+
+    \node[label] (val) at ([yshift=-7mm]csr) {Value:};
+    \node[box] (v0) at ([xshift=14mm,yshift=-7mm]csr) {1};
+    \node[box] (v1) [right=0pt of v0] {3};
+    \node[box] (v2) [right=0pt of v1] {2};
+    \node[box] (v3) [right=0pt of v2] {3};
+    \node[box] (v4) [right=0pt of v3] {1};
+    \node[box] (v5) [right=0pt of v4] {3};
+    \node[box] (v6) [right=0pt of v5] {5};
+  \end{tikzpicture}
+  \caption{CSR 格式存储示意图}
+  \label{fig:csr_storage}
+\end{figure}

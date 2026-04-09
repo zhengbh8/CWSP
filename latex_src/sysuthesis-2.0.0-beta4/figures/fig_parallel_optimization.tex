@@ -1,0 +1,29 @@
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[
+        node distance=0.8cm and 1cm,
+        stepbox/.style={rectangle, draw, rounded corners, minimum width=6cm, minimum height=1.2cm, align=center, thick, fill=orange!10},
+        arrow/.style={-stealth, thick},
+        font=\small
+    ]
+
+    % Draw Grid for GPU
+    \draw[thick, draw=green!60!black, rounded corners, loosely dashed] (-4.5, 1.5) rectangle (4.5, -6.5);
+    \node[anchor=north west, font=\bfseries\large, text=green!50!black] at (-4.2, 1.2) {GPU (CUDA) 并行架构化};
+
+    % Phase 1: Line Graph Construction
+    \node[stepbox] at (0, -0.5) (csr) {第一阶段: 拓扑高并发构建 \\ (CSR度数扫描与前缀和无锁映射)};
+    
+    % Phase 2: Conditional Weight SIMT
+    \node[stepbox] at (0, -3.0) (simt) {第二阶段: 条件权重提取 \\ (SIMT多分支协同与并发访存优化)};
+    
+    % Phase 3: Delta-Stepping
+    \node[stepbox] at (0, -5.5) (delta) {第三阶段: $\Delta$-Stepping寻优 \\ (无序波前松弛与共享内存并发探底)};
+
+    \draw[arrow] (csr) -- (simt);
+    \draw[arrow] (simt) -- (delta);
+
+    \end{tikzpicture}
+    \caption{基于CUDA架构的线图寻路并行优化策略实施框架}
+    \label{fig:parallel_optimization}
+\end{figure}

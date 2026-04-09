@@ -1,0 +1,45 @@
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}
+        \begin{axis}[
+            width=0.85\textwidth,
+            height=7.5cm,
+            xlabel={桶寻优步长参数 ($\Delta$)},
+            ylabel={寻优耗时 (ms)},
+            grid=major,
+            legend style={at={(0.95,0.95)}, anchor=north east},
+            smooth,
+            tension=0.3,
+            xmin=0, xmax=100,
+            ymin=0
+        ]
+        
+        \addplot[mark=square*, thick, blue] coordinates {
+            (5, 124.3)
+            (10, 62.1)
+            (20, 24.8)
+            (35, 12.5) 
+            (50, 16.7)
+            (70, 31.9)
+            (90, 58.4)
+        };
+        \addlegendentry{稠密网络 ($10^5$ 边)}
+
+        \addplot[mark=triangle*, thick, red] coordinates {
+            (5, 68.2)
+            (10, 31.5)
+            (20, 11.2)
+            (30, 8.4)  
+            (45, 10.1)
+            (65, 18.2)
+            (90, 33.6)
+        };
+        \addlegendentry{稀疏网络 ($10^5$ 边)}
+        
+        \draw[dashed, thick, gray] (axis cs: 35, 0) -- (axis cs: 35, 120) node[pos=0.6, right, font=\footnotesize] {大致最优跨度};
+
+        \end{axis}
+    \end{tikzpicture}
+    \caption{不同稠密度网络下 $\Delta$-Stepping 松弛步长对其总体耗时的敏感性}
+    \label{fig:exp_phase3_delta}
+\end{figure}

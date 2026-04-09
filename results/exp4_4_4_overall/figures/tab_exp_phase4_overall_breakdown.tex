@@ -1,0 +1,18 @@
+\begin{table}[H]
+    \centering
+    \caption{端到端三阶段耗时分解与总耗时对比（CPU vs GPU）}
+    \label{tab:exp_phase4_overall_breakdown}
+    \renewcommand{\arraystretch}{1.15}
+    \resizebox{0.98\textwidth}{!}{%
+    \begin{tabular}{cccccccccc}
+        \toprule
+        \textbf{网格规模} & $|V_H|$ & $|E_H|$ & \textbf{CPU-拓扑} & \textbf{CPU-权重} & \textbf{CPU-寻优} & \textbf{GPU-拓扑} & \textbf{GPU-权重} & \textbf{GPU-寻优+传输} & \textbf{总加速比}\\
+        \midrule
+        100\times100 & 39,600 & 157,208 & 0.298 & 1.089 & 7.136 & 0.049 & 0.007 & 4.499 & 1.87\times\\
+        150\times150 & 89,400 & 355,808 & 0.630 & 2.261 & 16.621 & 0.137 & 0.009 & 7.070 & 2.70\times\\
+        200\times200 & 159,200 & 634,408 & 1.045 & 3.997 & 28.887 & 0.125 & 0.017 & 9.996 & 3.35\times\\
+        250\times250 & 249,000 & 993,008 & 1.823 & 6.824 & 47.420 & 0.142 & 0.025 & 13.040 & 4.25\times\\
+        300\times300 & 358,800 & 1,431,608 & 2.853 & 9.985 & 71.445 & 0.149 & 0.033 & 17.094 & 4.88\times\\
+        \bottomrule
+    \end{tabular}}
+\end{table}

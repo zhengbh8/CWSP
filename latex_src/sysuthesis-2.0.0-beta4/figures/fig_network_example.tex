@@ -1,0 +1,22 @@
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+    >=Latex,
+    node distance=22mm,
+    every node/.style={circle,draw,minimum size=7mm,inner sep=0pt},
+    every edge/.style={draw,->,line width=0.4pt}
+  ]
+    \node (A) {A};
+    \node (B) [right=of A] {B};
+    \node (C) [below=of A] {C};
+    \node (D) [right=of C] {D};
+
+    \path (A) edge node[above] {$2$} (B)
+          (A) edge node[left]  {$4$} (C)
+          (B) edge node[right] {$3$} (D)
+          (C) edge node[below] {$1$} (D)
+          (C) edge[bend left=15] node[above] {$5$} (B);
+  \end{tikzpicture}
+  \caption{网络图示例}
+  \label{fig:graph_example}
+\end{figure}
