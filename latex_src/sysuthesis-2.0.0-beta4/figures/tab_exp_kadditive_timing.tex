@@ -1,0 +1,19 @@
+\begin{table}[H]
+    \centering
+    \caption{不同 $k$ 下 CWSP 三阶段耗时与加速比}
+    \label{tab:exp_kadditive_timing}
+    \setlength{\tabcolsep}{2pt}
+    \renewcommand{\arraystretch}{1.1}
+    \scriptsize
+    \begin{tabularx}{\textwidth}{YYYYYYYYYY}
+        \toprule
+        $k$ & CPU-S1(ms) & CPU-S2(ms) & CPU-S3(ms) & CPU总计(ms) & GPU-S1(ms) & GPU-S2(ms) & GPU-S3(ms) & GPU总计(ms) & 加速比\\
+        \midrule
+        1 & 0.440 & 0.245 & 2.198 & 2.883 & 0.106 & 0.022 & 1.130 & 1.258 & 2.291\times\\
+        2 & 3.274 & 2.768 & 19.825 & 25.867 & 0.581 & 0.040 & 1.406 & 2.027 & 12.762\times\\
+        3 & 31.022 & 32.201 & 190.529 & 253.752 & 1.854 & 0.122 & 3.475 & 5.451 & 46.552\times\\
+        4 & 213.330 & 261.979 & 1596.350 & 2071.660 & 5.445 & 0.985 & 10.305 & 16.734 & 123.797\times\\
+        5 & 1565.760 & 2163.300 & 15316.200 & 19045.200 & 32.023 & 8.119 & 84.798 & 124.939 & 152.436\times\\
+        \bottomrule
+    \end{tabularx}
+\end{table}

@@ -1,24 +1,22 @@
 \begin{table}[H]
   \centering
   \caption{非加性最短路径问题分类汇总}
-  \vspace{0.2cm}
   \label{tab:non_additive_sp_classification}
-  \renewcommand{\arraystretch}{1.3}
-  \begin{tabular}{p{0.25\linewidth} p{0.3\linewidth} p{0.35\linewidth}}
+  \begin{tabularx}{\textwidth}{p{0.24\textwidth} p{0.33\textwidth} p{0.33\textwidth}}
     \toprule
     \textbf{问题分类} & \textbf{核心约束特征/物理意义} & \textbf{代表性求解算法} \\
     \midrule
-    瓶颈路径问题 \newline (Bottleneck Path) & 极小化路径最大权值或极大化最小权值（如网络最大可用带宽）。 & 修正松弛规则的Dijkstra、最小瓶颈生成树、二分搜索配合连通性检验。 \\
+    瓶颈路径问题 \newline (Bottleneck Path) & 极小化路径最大权值或极大化最小权值（如网络最大可用带宽）. & 修正松弛规则的Dijkstra、最小瓶颈生成树、二分搜索配合连通性检验. \\
     \addlinespace
-    资源约束型最短路径 \newline (RCSP) & 受制于累计资源上限（如时间窗、电池电量），最优子结构被破坏。 & 标签算法(Labeling)、分支定价(Branch-and-Price)。 \\
+    资源约束型最短路径 \newline (RCSP) & 受制于累计资源上限（如时间窗、电池电量），最优子结构被破坏. & 标签算法(Labeling)、分支定价(Branch-and-Price). \\
     \addlinespace
-    多属性非线性组合 \newline 最短路径 & 同时考虑多维度成本（时间、油耗、风险）的非凸或非线性聚合目标。 & 多目标进化算法(NSGA-II)、非线性标量化、鲁棒多属性优化。 \\
+    多属性非线性组合 \newline 最短路径 & 同时考虑多维度成本（时间、油耗、风险）的非凸或非线性聚合目标. & 多目标进化算法(NSGA-II)、非线性标量化、鲁棒多属性优化. \\
     \addlinespace
-    时间依赖型最短路径 \newline (TDSP) & 边权因出发时间而异（随高峰期或时刻表波动），涉及等待与先进先出属性。 & 时间扩展图离散化、带时间标签的动态规划算法。 \\
+    时间依赖型最短路径 \newline (TDSP) & 边权因出发时间而异（随高峰期或时刻表波动），涉及等待与先进先出属性. & 时间扩展图离散化、带时间标签的动态规划算法. \\
     \addlinespace
-    随机性与相关性最短路径 \newline (SCSP) & 边权不确定并存在空间相依（如连片降雨引发的全局拥堵概率分布）。 & 随机规划模型、分布鲁棒优化、基于采样的启发式搜索。 \\
+    随机性与相关性最短路径 \newline (SCSP) & 边权不确定并存在空间相依（如连片降雨引发的全局拥堵概率分布）. & 随机规划模型、分布鲁棒优化、基于采样的启发式搜索. \\
     \addlinespace
-    路径依赖型最短路径 \newline (Path-Dependent SP) & 转移成本取决于历史访问节点序列或转弯惩罚，状态空间随历史长度爆炸。 & 状态扩展图映射、基于支配规则剪枝的标签算法、本文提出的线图转换法。 \\
+    路径依赖型最短路径 \newline (Path-Dependent SP) & 转移成本取决于历史访问节点序列或转弯惩罚，状态空间随历史长度爆炸. & 状态扩展图映射、基于支配规则剪枝的标签算法、本文提出的线图转换法. \\
     \bottomrule
-  \end{tabular}
+  \end{tabularx}
 \end{table}

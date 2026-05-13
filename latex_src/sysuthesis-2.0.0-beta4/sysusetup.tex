@@ -1,10 +1,20 @@
-% !TeX root = ./main.tex
+% !TeX root = main.tex
+% !TeX program = xelatex
+
+\iffalse
+\documentclass{article}
+\begin{document}
+\fi
 
 \sysusetup{
   title                = {基于线图的非加性最短路径问题与GPU并行优化},
   title*               = {Line-Graph-Based Non-Additive Shortest Path Problems and GPU Parallel Optimization},
+  author               = {xxx},
+  author*              = {xxx},
   speciality           = {应用统计},
   speciality*          = {Applied Statistics},
+  supervisor           = {xxx},
+  supervisor*          = {xxx},
   % practice-supervisor  = {XXX~教授, XXX~教授},
   % practice-supervisor* = {Prof. XXX, Prof. XXX},
   % date                 = {2017-05-01},  % 完成时间，默认为今日
@@ -45,6 +55,39 @@
 % 跨页表格
 \usepackage{longtable}
 
+% 表格格式统一配置
+\usepackage{etoolbox}
+\newcolumntype{Y}{>{\centering\arraybackslash}X}
+\DeclareCaptionFont{tablefive}{\zihao{5}\songti\setstretch{1}}
+\captionsetup[table]{
+  name=表,
+  labelsep=space,
+  position=top,
+  justification=centering,
+  singlelinecheck=false,
+  font=tablefive,
+  labelfont=tablefive,
+  textfont=tablefive,
+  aboveskip=\baselineskip,
+  belowskip=0.5\baselineskip
+}
+
+\iffalse
+\end{document}
+\fi
+\setlength{\heavyrulewidth}{1.5pt}
+\setlength{\lightrulewidth}{1pt}
+\setlength{\cmidrulewidth}{1pt}
+\setlength{\arrayrulewidth}{1pt}
+\setlength{\tabcolsep}{0.1cm}
+\setlength{\extrarowheight}{0.1cm}
+\setlength{\LTleft}{0pt}
+\setlength{\LTright}{0pt}
+\setlength{\LTpre}{\baselineskip}
+\setlength{\LTpost}{0.5\baselineskip}
+\AtBeginEnvironment{table}{\zihao{5}\songti\setstretch{1}}
+\AtBeginEnvironment{longtable}{\zihao{5}\songti\setstretch{1}}
+
 % 绘图
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning,matrix}
@@ -59,7 +102,6 @@
 
 % 参考文献使用 BibTeX + natbib 宏包
 % 顺序编码制
-\usepackage[sort]{natbib}
 \bibliographystyle{sysuthesis-numerical}
 
 % 参考文献使用 BibLaTeX 宏包

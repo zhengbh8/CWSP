@@ -1,19 +1,22 @@
 % !TeX root = ../main.tex
 
-\sysusetup{
-  keywords  = {},
-  keywords* = {},
+\ckeywords{路径依赖最短路径, 有限阶历史依赖, 线图, 条件权重最短路径, GPU并行}
+\ekeywords{Path-dependent shortest path, Finite-order history dependency, Line graph, Conditional Weighting Shortest Path, GPU parallelization}
+
+\cabstract{
+最短路径问题广泛应用于交通导航、物流调度与机器人规划等场景.传统最短路径模型默认边权可加且与路径历史无关，因而难以直接处理转向惩罚、禁转约束等由边间过渡关系诱发的路径依赖代价.针对该类有限阶历史依赖的非加性最短路径问题，本文构建了基于线图映射与条件加权的条件权重最短路径（Conditional Weighting Shortest Path, CWSP）框架，并围绕“拓扑替代构造-条件权重计算-替代图寻优”三阶段给出 GPU 并行化实现.
+
+在建模层面，本文基于 $k$-加性思想将原图中的历史依赖状态显式展开为替代图节点，将动态转移代价静态编码为替代图边权，从而把原问题等价转化为加性最短路径问题，并给出最优性等价论证.在实现层面，针对线图化带来的规模膨胀与串行瓶颈，本文在阶段1采用“出度统计+并行前缀和+CSR 无锁写入”的并行构图策略，在阶段2采用边级并发与访存规整的条件加权策略，在阶段3采用桶式 $\Delta$-Stepping 算法替代全序优先队列 Dijkstra，以提升大规模场景下的整体吞吐能力.
+
+实验在真实 MIA 微观滑行路网与多组网格数据上展开.结果显示：在 40 组带锐角惩罚的复杂点对测试中，传统 Dijkstra 成功率为 50\%，而 CWSP 成功率为 100\%.在规模扩展实验中，当线图规模达到 $|E_H|=1{,}431{,}608$ 时，端到端耗时由 CPU 的 $84.283\,$ms 降至 GPU 的 $17.276\,$ms，加速比达 $4.88\times$.进一步的历史阶数扩展实验（$k=1\sim5$）表明，随着状态空间膨胀，GPU 端到端加速比由 $2.29\times$ 提升至 $152.44\times$；当 $k=6$ 时出现显存不足，揭示了高阶场景下替代图构建与存储的资源上限问题.上述结果验证了本文方法在路径依赖建模正确性与并行可扩展性两方面的有效性.
 }
 
-\begin{abstract}
-  
-\end{abstract}
+\eabstract{
+The shortest path problem is a fundamental problem in graph optimization and is widely used in transportation, logistics, and robotic planning. Classical shortest-path models assume additive edge costs independent of path history, which makes them inadequate for path-dependent settings such as turn penalties and prohibited turns. To address finite-order history-dependent non-additive shortest path problems, this thesis develops a Conditional Weighting Shortest Path (CWSP) framework based on line-graph transformation, and implements a three-stage GPU pipeline: topology substitution, conditional weighting, and shortest-path search on the transformed graph.
 
-\begin{abstract*}
-  
-\end{abstract*}
+From the modeling perspective, the proposed method uses the $k$-additive formulation to explicitly encode history-dependent states as nodes in an alternative graph and converts dynamic transition costs into static edge weights. This transformation reduces the original non-additive problem to an additive shortest-path problem with preserved optimality. From the implementation perspective, to mitigate graph-size inflation and serial bottlenecks, stage 1 adopts parallel out-degree counting, prefix-sum allocation, and lock-free CSR filling; stage 2 applies edge-level parallel conditional weighting with memory-access regularization; stage 3 replaces globally ordered priority-queue Dijkstra with bucket-based $\Delta$-Stepping algorithm to increase parallel relaxation throughput.
 
-% 法语（第三种语言）摘要：如不需要可保持注释
-%\begin{abstract**}
-%  
-%\end{abstract**}
+Experiments are conducted on the real Miami International Airport (MIA) taxiway network and multiple grid datasets. On 40 constrained origin-destination pairs with sharp-turn penalties, traditional Dijkstra achieves only a 50\% success rate, while CWSP achieves 100\%. In large-scale tests, when the transformed graph reaches $|E_H|=1{,}431{,}608$, end-to-end runtime is reduced from $84.283$ ms on CPU to $17.276$ ms on GPU, yielding a $4.88\times$ speedup. In higher-order history experiments ($k=1\sim5$), end-to-end GPU speedup increases from $2.29\times$ to $152.44\times$ as state-space expansion grows. An out-of-memory event at $k=6$ further indicates that graph construction and storage become the primary resource bottleneck in high-order scenarios. These results demonstrate both the modeling validity and the parallel scalability of the proposed approach.
+}
+
+\makeabstract

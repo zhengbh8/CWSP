@@ -2,9 +2,7 @@
     \centering
     \caption{CPU Dijkstra 与 GPU $\Delta$-Stepping 在不同规模线图上的寻优耗时对比}
     \label{tab:exp_phase3_dijkstra_vs_delta}
-    \renewcommand{\arraystretch}{1.15}
-    \resizebox{0.96\textwidth}{!}{%
-    \begin{tabular}{cccccc}
+    \begin{tabularx}{\textwidth}{YYYYYY}
         \toprule
         \textbf{网格规模} & $|V_H|$ & $|E_H|$ & \textbf{CPU Dijkstra (ms)} & \textbf{GPU $\Delta$-Stepping (ms)} & \textbf{加速比}\\
         \midrule
@@ -14,5 +12,5 @@
         250\times250 & 249,000 & 993,008 & 48.153 & 13.061 & 3.69\times\\
         300\times300 & 358,800 & 1,431,608 & 66.904 & 14.005 & 4.78\times\\
         \bottomrule
-    \end{tabular}}
+    \end{tabularx}
 \end{table}

@@ -2,11 +2,51 @@
 % !TeX program = xelatex
 % !TeX spellcheck = en_US
 
-\documentclass[degree=master,fontset=mac]{sysuthesis}
+\documentclass[degree=master,fontset=mac]{sysuthesis 2}
 % degree      = doctor | master | bachelor
 % degree-type = academic | professional
 % language    = chinese | english
 % fontset     = windows | mac | ubuntu | fandol
+
+\makeatletter
+\newif\ifsysu@math@style@TeX
+\sysu@math@style@TeXfalse
+\define@key{sysu}{title}{\ctitle{#1}}
+\define@key{sysu}{title*}{\etitle{#1}}
+\define@key{sysu}{author}{\cauthor{#1}}
+\define@key{sysu}{author*}{\eauthor{#1}}
+\define@key{sysu}{speciality}{\cmajor{#1}}
+\define@key{sysu}{speciality*}{\emajor{#1}}
+\define@key{sysu}{supervisor}{\cmentor{#1}}
+\define@key{sysu}{supervisor*}{\ementor{#1}}
+\define@key{sysu}{practice-supervisor}{\cindustrymentor{#1}}
+\define@key{sysu}{practice-supervisor*}{\cindustrymentor{#1}}
+\define@key{sysu}{keywords}{\ckeywords{#1}}
+\define@key{sysu}{keywords*}{\ekeywords{#1}}
+\define@key{sysu}{math-style}{}
+\define@key{sysu}{math-font}{}
+\define@key{sysu}{cite-style}{}
+\define@key{sysu}{professional-type}{}
+\define@key{sysu}{professional-type*}{}
+\define@key{sysu}{department}{}
+\define@key{sysu}{student-id}{}
+\define@key{sysu}{secret-level}{}
+\define@key{sysu}{secret-level*}{}
+\define@key{sysu}{secret-year}{}
+\define@key{sysu}{reviewer}{}
+\define@key{sysu}{date}{}
+\eauthor{}
+\emajor{}
+\ementor{}
+\cindustrymentor{}
+\newcommand{\sysusetup}[1]{\setkeys{sysu}{#1}}
+\let\copyrightpage\relax
+\renewcommand{\bibsection}{%
+	\chapter*{参考文献}%
+	\addcontentsline{toc}{chapter}{参考文献}%
+	\markboth{参考文献}{参考文献}%
+}
+\makeatother
 
 % 加载宏包、全部的配置
 \input{sysusetup.tex}
@@ -20,8 +60,6 @@
 \frontmatter
 \input{chapters/abstract.tex}
 \tableofcontents
-\listoffigures
-\listoftables
 % \listoffiguresandtables
 % \input{chapters/notation.tex}
 
@@ -35,10 +73,10 @@
 % \printbibliography       % 参考文献使用 BibLaTeX 编译
 
 \appendix
-% \input{chapters/complementary.tex}
+\input{chapters/complementary.tex}
 
 \backmatter
-% \input{chapters/acknowledgements.tex}
+\input{chapters/acknowledgements.tex}
 % \input{chapters/achievements.tex}
 
 \end{document}
